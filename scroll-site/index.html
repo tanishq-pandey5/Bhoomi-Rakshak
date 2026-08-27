@@ -7,9 +7,12 @@
 <style>
   :root {
     --bg: #051321;
+    --bg-dark: #020a12;
+    --panel-bg: #0b263d;
     --teal: #16B8A6;
     --teal-bright: #20E9D2;
     --saffron: #FF9F43;
+    --risk-red: #EF4444;
     --text: #F5F7FA;
     --text-dim: rgba(245, 247, 250, 0.6);
   }
@@ -53,6 +56,10 @@
     position: sticky; top: 0; height: 100vh; width: 100%;
     overflow: hidden;
   }
+  #film-container {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    transition: filter 0.4s ease, transform 0.4s ease;
+  }
   #film {
     position: absolute; inset: 0; width: 100%; height: 100%;
     display: block;
@@ -71,6 +78,7 @@
     will-change: opacity, transform;
     width: 86%;
     max-width: 800px;
+    transition: opacity 0.5s ease, transform 0.5s ease;
   }
   .caption h1 {
     font-size: clamp(38px, 6.5vw, 86px);
@@ -80,6 +88,7 @@
   .caption h2 {
     font-size: clamp(28px, 4vw, 56px);
     font-weight: 800; letter-spacing: -0.02em; line-height: 1.05;
+    text-transform: uppercase;
   }
   .caption p {
     margin-top: 14px;
@@ -96,7 +105,6 @@
   .cap-left { left: 8vw; top: 50%; transform: translateY(-50%); }
   .cap-right { right: 8vw; top: 50%; transform: translateY(-50%); text-align: right; }
   .cap-right p { margin-left: auto; }
-  .cap-top { left: 50%; top: 12vh; transform: translateX(-50%); text-align: center; }
   .cap-bottom { left: 50%; bottom: 10vh; transform: translateX(-50%); text-align: center; }
 
   #scroll-cue {
@@ -116,7 +124,104 @@
     50% { transform: translateY(8px); opacity: 0.3; }
   }
 
-  /* ── CTA buttons ── */
+  /* ── Interactive overlays ── */
+  #interactive-overlay-container {
+    position: absolute; inset: 0; z-index: 8; pointer-events: none;
+  }
+
+  /* Telemetry Signals Overlays */
+  .telemetry-node {
+    position: absolute;
+    opacity: 0;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    font-family: monospace;
+  }
+  .telemetry-pin {
+    width: 10px; height: 10px; border-radius: 50%; background: var(--teal-bright);
+    box-shadow: 0 0 12px var(--teal-bright);
+    position: relative; display: inline-block;
+  }
+  .telemetry-pin::after {
+    content: ""; position: absolute; inset: -10px; border-radius: 50%;
+    border: 1px solid var(--teal-bright);
+    animation: beacon-pulse 2s infinite;
+  }
+  @keyframes beacon-pulse {
+    0% { transform: scale(0.6); opacity: 1; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+  .telemetry-card {
+    background: rgba(11, 38, 61, 0.85);
+    border: 1px solid rgba(32, 233, 210, 0.25);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-left: 15px;
+    display: inline-block; vertical-align: middle;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .telemetry-card h4 { font-size: 10px; color: var(--teal-bright); letter-spacing: 0.1em; text-transform: uppercase; }
+  .telemetry-card p { font-size: 14px; font-weight: bold; color: var(--text); margin-top: 2px; }
+
+  /* AI Convergence overlay */
+  #ai-convergence-svg {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0; transition: opacity 0.4s ease;
+  }
+
+  /* 72-Hour Prediction timeline */
+  #prediction-timeline-overlay {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0; transition: opacity 0.4s ease;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .timeline-container {
+    width: 80%; max-width: 900px;
+    background: rgba(11, 38, 61, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 40px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex; flex-direction: column; gap: 30px;
+  }
+  .timeline-axis {
+    display: flex; justify-content: space-between; position: relative;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    padding-top: 15px;
+  }
+  .timeline-tick {
+    display: flex; flex-direction: column; align-items: center;
+    font-family: monospace; font-size: 12px; color: var(--text-dim);
+  }
+  .timeline-tick.active { color: var(--teal-bright); font-weight: bold; }
+  .timeline-curve-box {
+    width: 100%; height: 200px; position: relative;
+  }
+  .timeline-curve-box svg { width: 100%; height: 100%; overflow: visible; }
+
+  /* Risk score dramatic display */
+  #risk-score-overlay {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0; transition: opacity 0.4s ease;
+    display: flex; items-center: center; justify-content: center;
+    flex-direction: column; text-align: center;
+  }
+  .risk-large-panel {
+    background: rgba(5, 19, 33, 0.9);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 16px;
+    padding: 50px 60px;
+    max-width: 600px;
+    box-shadow: 0 0 40px rgba(239, 68, 68, 0.05);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .risk-huge-num { font-size: 110px; font-weight: 900; color: var(--risk-red); line-height: 1; font-family: monospace; }
+  .risk-title { font-size: 24px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--risk-red); margin-top: 10px; }
+  .risk-subtitle { font-size: 14px; text-transform: uppercase; letter-spacing: 0.25em; color: var(--text-dim); margin-top: 5px; }
+
+  /* CTA button */
   .cta {
     margin-top: 30px; pointer-events: auto;
     display: inline-block;
@@ -210,41 +315,173 @@
   <!-- Scroll-Scrubber Canvas Track -->
   <div id="track">
     <div id="stage">
-      <canvas id="film"></canvas>
+      <div id="film-container">
+        <canvas id="film"></canvas>
+      </div>
       <div id="vignette"></div>
 
-      <!-- Chap 1 Intro -->
-      <div class="caption cap-center" data-in="-0.05" data-hold="0.05" data-out="0.18">
+      <!-- Chap 1 Intro (0% to 12.5% of total scroll) -->
+      <div class="caption cap-center" data-in="-0.05" data-hold="0.05" data-out="0.125">
         <h1>BHOOMI <span class="teal">RAKSHAK</span></h1>
-        <p>AI-powered 72-hour landslide prediction and early-warning system.<br>Early Signals. Safer Hills.</p>
+        <p>Early Signals. Safer Hills.</p>
+      </div>
+      
+      <div class="caption cap-center" data-in="0.125" data-hold="0.18" data-out="0.25">
+        <h2>The Earth<br>is alive.</h2>
+        <p>Constantly changing. Constantly shifting.</p>
       </div>
 
-      <!-- Chap 2 Telemetry -->
-      <div class="caption cap-left" data-in="0.18" data-hold="0.28" data-out="0.38">
-        <h2>Continuous<br>Telemetry Node Arrays.</h2>
-        <p>Monitoring local precipitation levels, soil saturation, and geophone micro-vibrations in real-time.</p>
+      <!-- Chap 2 Zoom to India (25% to 37.5%) -->
+      <div class="caption cap-left" data-in="0.25" data-hold="0.32" data-out="0.375">
+        <h2>From the planet<br>to a country.</h2>
+        <p>Highlighting India. Scaling geography to terrain dynamics.</p>
       </div>
 
-      <!-- Chap 3 Saturation -->
-      <div class="caption cap-right" data-in="0.38" data-hold="0.48" data-out="0.58">
-        <h2>Geomechanical<br><span class="teal">Saturation Mapping</span></h2>
-        <p>Analyzing clay friction parameters and geological safety factors under heavy monsoonal rain.</p>
+      <!-- Chap 3 Zoom to NE (37.5% to 50%) -->
+      <div class="caption cap-right" data-in="0.375" data-hold="0.44" data-out="0.50">
+        <h2>The North-East.</h2>
+        <p>Where terrain, monsoonal rainfall, and slope gradients interact.</p>
       </div>
 
-      <!-- Chap 4 Collapse -->
-      <div class="caption cap-left" data-in="0.58" data-hold="0.68" data-out="0.78">
-        <h2>Slope Displacement<br>Forecasting.</h2>
-        <p>Gradient Boosting Classifiers predict geotechnical structural failures up to 72 hours in advance.</p>
+      <!-- Chapter 4: Environmental Signals (50% to 65% scroll) -->
+      <div class="caption cap-left" data-in="0.50" data-hold="0.56" data-out="0.65">
+        <h2>A Landscape<br>full of signals.</h2>
+        <p>Observing moisture, vibration, and rainfall markers directly from the soil.</p>
       </div>
 
-      <!-- Chap 5 Warning -->
-      <div class="caption cap-right" data-in="0.78" data-hold="0.88" data-out="0.98">
-        <h2>Early Warning<br><span class="saffron">Broadcast.</span></h2>
-        <p>Triggering solar-powered sirens and geofenced warnings to shield vulnerable mountain populations.</p>
+      <!-- Interactive telemetry overlay markers -->
+      <div id="interactive-overlay-container">
+        <div class="telemetry-node" id="node-rainfall" style="top: 25%; left: 30%;">
+          <span class="telemetry-pin"></span>
+          <div class="telemetry-card">
+            <h4>Precipitation</h4>
+            <p id="over-val-rain">42 mm/hr</p>
+          </div>
+        </div>
+        <div class="telemetry-node" id="node-moisture" style="top: 48%; left: 62%;">
+          <span class="telemetry-pin"></span>
+          <div class="telemetry-card">
+            <h4>Soil Moisture</h4>
+            <p id="over-val-moisture">78%</p>
+          </div>
+        </div>
+        <div class="telemetry-node" id="node-slope" style="top: 65%; left: 22%;">
+          <span class="telemetry-pin"></span>
+          <div class="telemetry-card">
+            <h4>Slope Angle</h4>
+            <p>38°</p>
+          </div>
+        </div>
+        <div class="telemetry-node" id="node-elevation" style="top: 15%; left: 74%;">
+          <span class="telemetry-pin"></span>
+          <div class="telemetry-card">
+            <h4>Elevation</h4>
+            <p>1,420 m</p>
+          </div>
+        </div>
+        <div class="telemetry-node" id="node-vibration" style="top: 38%; left: 45%;">
+          <span class="telemetry-pin"></span>
+          <div class="telemetry-card">
+            <h4>Vibrations</h4>
+            <p id="over-val-vibe">ELEVATED</p>
+          </div>
+        </div>
+        <div class="telemetry-node" id="node-history" style="top: 55%; left: 12%;">
+          <span class="telemetry-pin"></span>
+          <div class="telemetry-card">
+            <h4>Hist. Events</h4>
+            <p>HIGH</p>
+          </div>
+        </div>
+
+        <!-- SVG AI Convergence Lines -->
+        <svg id="ai-convergence-svg">
+          <g stroke="rgba(32, 233, 210, 0.4)" stroke-width="1.5" stroke-dasharray="4,4">
+            <line id="line-rain" x1="0" y1="0" x2="0" y2="0"></line>
+            <line id="line-moisture" x1="0" y1="0" x2="0" y2="0"></line>
+            <line id="line-slope" x1="0" y1="0" x2="0" y2="0"></line>
+            <line id="line-elevation" x1="0" y1="0" x2="0" y2="0"></line>
+            <line id="line-vibration" x1="0" y1="0" x2="0" y2="0"></line>
+            <line id="line-history" x1="0" y1="0" x2="0" y2="0"></line>
+          </g>
+          <!-- Central Analytical AI core -->
+          <circle id="ai-core-circle" cx="0" cy="0" r="45" fill="rgba(11, 38, 61, 0.9)" stroke="#16B8A6" stroke-width="3" style="opacity:0;"></circle>
+          <text id="ai-core-text" x="0" y="5" fill="#20E9D2" font-size="10" font-weight="900" text-anchor="middle" style="opacity:0; font-family:sans-serif;">AI ANALYSIS</text>
+        </svg>
+
+        <!-- 72-Hour Prediction timeline overlay -->
+        <div id="prediction-timeline-overlay">
+          <div class="timeline-container">
+            <div>
+              <p class="kicker" style="margin-bottom: 5px;">Predictive Intelligence</p>
+              <h3 style="font-size: 24px; font-weight:900; text-transform:uppercase;">72 Hours Prediction Window</h3>
+            </div>
+            
+            <div class="timeline-curve-box">
+              <svg viewBox="0 0 800 200">
+                <!-- Grid background lines -->
+                <line x1="0" y1="180" x2="800" y2="180" stroke="rgba(255,255,255,0.08)" stroke-width="1"></line>
+                <line x1="0" y1="100" x2="800" y2="100" stroke="rgba(255,255,255,0.08)" stroke-dasharray="3,3" stroke-width="1"></line>
+                <line x1="0" y1="20" x2="800" y2="20" stroke="rgba(239, 68, 68, 0.15)" stroke-dasharray="5,5" stroke-width="1"></line>
+                
+                <!-- Animated curve line -->
+                <path id="timeline-svg-path" d="M 0 170 Q 200 160 400 120 T 800 30" fill="none" stroke="#FF9F43" stroke-width="4" stroke-linecap="round"></path>
+                <circle id="timeline-svg-marker" cx="0" cy="0" r="6" fill="#F5F7FA" stroke="#FF9F43" stroke-width="3" style="opacity:0;"></circle>
+              </svg>
+            </div>
+
+            <div class="timeline-axis">
+              <div class="timeline-tick active" id="tick-now"><span>NOW</span><span>Safe</span></div>
+              <div class="timeline-tick" id="tick-24"><span>24H</span><span>Watch</span></div>
+              <div class="timeline-tick" id="tick-48"><span>48H</span><span>Elevated</span></div>
+              <div class="timeline-tick" id="tick-72"><span>72H</span><span>Critical</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Risk Score Card -->
+        <div id="risk-score-overlay">
+          <div class="risk-large-panel">
+            <span class="risk-subtitle" style="color:var(--teal)">Forecast Warning</span>
+            <div class="risk-huge-num" id="risk-display-num">78%</div>
+            <div class="risk-title">High Landslide Risk</div>
+            <div class="risk-subtitle">Assam • Next 72 Hours</div>
+            
+            <div style="border-top:1px solid rgba(255,255,255,0.08); margin-top:25px; padding-top:20px; display:flex; justify-content:space-around; text-align:left;">
+              <div>
+                <span style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">Primary Drivers</span>
+                <p style="font-size:12px; font-weight:bold; color:var(--text); margin-top:4px;">☔ Rainfall (+31%)</p>
+                <p style="font-size:12px; font-weight:bold; color:var(--text)">💧 Soil Moisture (+22%)</p>
+              </div>
+              <div style="border-left:1px solid rgba(255,255,255,0.08); padding-left:25px;">
+                <span style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">Secondary Drivers</span>
+                <p style="font-size:12px; font-weight:bold; color:var(--text); margin-top:4px;">📐 Slope Angle (+17%)</p>
+                <p style="font-size:12px; font-weight:bold; color:var(--text)">📖 History (+10%)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Outro CTA -->
-      <div class="caption cap-center" data-in="0.92" data-hold="0.98" data-out="1.1">
+      <!-- Chap 5: AI Convergence (65% to 78%) -->
+      <div class="caption cap-center" data-in="0.65" data-hold="0.72" data-out="0.78">
+        <h2>Data is everywhere.<br><span class="teal">Intelligence connects it.</span></h2>
+        <p>Consolidating environmental feeds into a single geotechnical warning signal.</p>
+      </div>
+
+      <!-- Chap 6: 72H Timeline (78% to 88%) -->
+      <div class="caption cap-top" data-in="0.78" data-hold="0.84" data-out="0.88">
+        <h2>Not after the landslide.<br><span class="saffron">Before it.</span></h2>
+      </div>
+
+      <!-- Chap 7: Warning payoff (88% to 98%) -->
+      <div class="caption cap-center" data-in="0.88" data-hold="0.94" data-out="0.98">
+        <h2>When the signal rises,<br>we alert.</h2>
+      </div>
+
+      <!-- Outro CTA (98% to 100%) -->
+      <div class="caption cap-center" data-in="0.98" data-hold="1.05" data-out="1.1">
         <h1>BHOOMI <span class="teal">RAKSHAK</span></h1>
         <p>Early Signals. Safer Hills.</p>
         <a class="cta" href="#story">Explore Story</a>
@@ -308,7 +545,7 @@
             Telemetry syncs securely with cloud endpoints every 3 hours, powering predictive models with zero local grid reliance.
           </p>
         </div>
-        <img data-reveal src="frames/frame_0030.webp" alt="Telemetry sensor node" />
+        <img data-reveal src="frames/frame_0180.webp" alt="Telemetry sensor node" />
       </div>
     </section>
 
@@ -324,7 +561,7 @@
             The system maps safety factors, alerts responders when displacement and saturation exceed geomechanical limits, and predicts landslide triggers with 94.2% model accuracy.
           </p>
         </div>
-        <img data-reveal src="frames/frame_0055.webp" alt="Landslide risk prediction GBDT charts" />
+        <img data-reveal src="frames/frame_0300.webp" alt="Landslide risk prediction GBDT charts" />
       </div>
     </section>
 
@@ -373,10 +610,10 @@
     <!-- Gallery -->
     <section class="bp" id="gallery">
       <div class="bp-gallery">
-        <img class="g1" data-reveal src="frames/frame_0010.webp" alt="Misty mountains overview" />
-        <img class="g2" data-reveal src="frames/frame_0035.webp" alt="Sensor telemetry node detail" />
-        <img class="g3" data-reveal src="frames/frame_0070.webp" alt="Slope geomechanical failure" />
-        <img class="g4" data-reveal src="frames/frame_0090.webp" alt="Emergency broadcast tower flashing alerts" />
+        <img class="g1" data-reveal src="frames/frame_0080.webp" alt="Misty mountains overview" />
+        <img class="g2" data-reveal src="frames/frame_0150.webp" alt="Sensor telemetry node detail" />
+        <img class="g3" data-reveal src="frames/frame_0240.webp" alt="Slope geomechanical failure" />
+        <img class="g4" data-reveal src="frames/frame_0350.webp" alt="Emergency broadcast tower flashing alerts" />
       </div>
     </section>
 
@@ -451,6 +688,193 @@
     window.addEventListener("scroll", () => {
       nav.classList.toggle("on", window.scrollY > getFilmEnd() * 0.95);
     }, { passive: true });
+
+    // ── Coordinate Overlays with Scroll Progress ──
+    const overlayRain = document.getElementById("node-rainfall");
+    const overlayMoisture = document.getElementById("node-moisture");
+    const overlaySlope = document.getElementById("node-slope");
+    const overlayElevation = document.getElementById("node-elevation");
+    const overlayVibration = document.getElementById("node-vibration");
+    const overlayHistory = document.getElementById("node-history");
+    const overlayTimeline = document.getElementById("prediction-timeline-overlay");
+    const overlayRiskScore = document.getElementById("risk-score-overlay");
+
+    const svgOverlay = document.getElementById("ai-convergence-svg");
+    const aiCircle = document.getElementById("ai-core-circle");
+    const aiText = document.getElementById("ai-core-text");
+
+    const timelinePath = document.getElementById("timeline-svg-path");
+    const timelineMarker = document.getElementById("timeline-svg-marker");
+    const tickNow = document.getElementById("tick-now");
+    const tick24 = document.getElementById("tick-24");
+    const tick48 = document.getElementById("tick-48");
+    const tick72 = document.getElementById("tick-72");
+
+    // Path details for 72h curve
+    const pathTotalLength = timelinePath ? timelinePath.getTotalLength() : 1000;
+    if (timelinePath) {
+      timelinePath.style.strokeDasharray = pathTotalLength;
+      timelinePath.style.strokeDashoffset = pathTotalLength;
+    }
+
+    // Capture standard loop checks
+    const checkOverlayStates = () => {
+      if (!state.ready) return;
+      const maxScroll = track.offsetHeight - window.innerHeight;
+      const p = maxScroll > 0 ? Math.min(1, Math.max(0, window.scrollY / maxScroll)) : 0;
+      
+      const filmContainer = document.getElementById("film-container");
+
+      // 1. Transition effect (Blur and crossfade interpolation at 50% scroll)
+      if (p >= 0.46 && p <= 0.54) {
+        const blurAmt = Math.abs(p - 0.5) * 80; // Peak blur of 4px
+        const scaleAmt = 1.0 + (0.04 - Math.abs(p - 0.5) * 0.5); // Peak zoom of 1.04
+        filmContainer.style.filter = `blur(${blurAmt.toFixed(1)}px)`;
+        filmContainer.style.transform = `scale(${scaleAmt.toFixed(3)})`;
+      } else {
+        filmContainer.style.filter = "none";
+        filmContainer.style.transform = "none";
+      }
+
+      // 2. Chapter 4: Environmental Signals (50% to 65% scroll)
+      const triggerTelemetry = (node, start, end, activeProgress) => {
+        if (activeProgress >= start && activeProgress <= end) {
+          node.style.opacity = "1";
+          node.style.transform = "translateY(0)";
+        } else {
+          node.style.opacity = "0";
+          node.style.transform = "translateY(15px)";
+        }
+      };
+      
+      triggerTelemetry(overlayRain, 0.50, 0.65, p);
+      triggerTelemetry(overlayMoisture, 0.52, 0.65, p);
+      triggerTelemetry(overlaySlope, 0.54, 0.65, p);
+      triggerTelemetry(overlayElevation, 0.56, 0.65, p);
+      triggerTelemetry(overlayVibration, 0.58, 0.65, p);
+      triggerTelemetry(overlayHistory, 0.60, 0.65, p);
+
+      // Dynamic telemetry numerical changes during scroll
+      if (p >= 0.50 && p <= 0.65) {
+        const factor = (p - 0.50) / 0.15;
+        document.getElementById("over-val-rain").innerText = `${Math.round(15 + factor * 27)} mm/hr`;
+        document.getElementById("over-val-moisture").innerText = `${Math.round(45 + factor * 33)}%`;
+        document.getElementById("over-val-vibe").innerText = factor > 0.6 ? "CRITICAL ALERT" : "ELEVATED";
+        document.getElementById("over-val-vibe").style.color = factor > 0.6 ? "var(--risk-red)" : "var(--saffron)";
+      }
+
+      // 3. Chapter 5: AI Convergence (65% to 78% scroll)
+      if (p >= 0.65 && p <= 0.78) {
+        svgOverlay.style.opacity = "1";
+        
+        // Find screen coordinates of the nodes
+        const getCenterCoords = (el) => {
+          const rect = el.getBoundingClientRect();
+          const stageRect = document.getElementById("stage").getBoundingClientRect();
+          return {
+            x: rect.left - stageRect.left + 5,
+            y: rect.top - stageRect.top + 5
+          };
+        };
+
+        const rainC = getCenterCoords(overlayRain.querySelector(".telemetry-pin"));
+        const moistC = getCenterCoords(overlayMoisture.querySelector(".telemetry-pin"));
+        const slopeC = getCenterCoords(overlaySlope.querySelector(".telemetry-pin"));
+        const elevC = getCenterCoords(overlayElevation.querySelector(".telemetry-pin"));
+        const vibeC = getCenterCoords(overlayVibration.querySelector(".telemetry-pin"));
+        const histC = getCenterCoords(overlayHistory.querySelector(".telemetry-pin"));
+
+        // Central target coordinate (Center of canvas)
+        const targetX = window.innerWidth / 2;
+        const targetY = window.innerHeight / 2;
+
+        aiCircle.setAttribute("cx", targetX);
+        aiCircle.setAttribute("cy", targetY);
+        aiText.setAttribute("x", targetX);
+        aiText.setAttribute("y", targetY + 4);
+
+        // Core visual triggers
+        const convProgress = (p - 0.65) / 0.13; // 0.0 to 1.0
+        
+        // Draw lines contracting towards target
+        const setLineCoords = (lineEl, from) => {
+          const curX = from.x + (targetX - from.x) * convProgress;
+          const curY = from.y + (targetY - from.y) * convProgress;
+          lineEl.setAttribute("x1", from.x);
+          lineEl.setAttribute("y1", from.y);
+          lineEl.setAttribute("x2", curX);
+          lineEl.setAttribute("y2", curY);
+        };
+
+        setLineCoords(document.getElementById("line-rain"), rainC);
+        setLineCoords(document.getElementById("line-moisture"), moistC);
+        setLineCoords(document.getElementById("line-slope"), slopeC);
+        setLineCoords(document.getElementById("line-elevation"), elevC);
+        setLineCoords(document.getElementById("line-vibration"), vibeC);
+        setLineCoords(document.getElementById("line-history"), histC);
+
+        if (convProgress >= 0.7) {
+          aiCircle.style.opacity = (convProgress - 0.7) / 0.3;
+          aiText.style.opacity = (convProgress - 0.7) / 0.3;
+        } else {
+          aiCircle.style.opacity = "0";
+          aiText.style.opacity = "0";
+        }
+
+        // Contract the outer cards
+        const contractNode = (node, from) => {
+          node.style.opacity = (1 - convProgress).toFixed(2);
+          const transX = (targetX - from.x) * convProgress * 0.4;
+          const transY = (targetY - from.y) * convProgress * 0.4;
+          node.style.transform = `translate(${transX}px, ${transY}px)`;
+        };
+        contractNode(overlayRain, rainC);
+        contractNode(overlayMoisture, moistC);
+        contractNode(overlaySlope, slopeC);
+        contractNode(overlayElevation, elevC);
+        contractNode(overlayVibration, vibeC);
+        contractNode(overlayHistory, histC);
+
+      } else {
+        svgOverlay.style.opacity = "0";
+      }
+
+      // 4. Chapter 6: 72H Prediction Timeline (78% to 88% scroll)
+      if (p >= 0.78 && p <= 0.88) {
+        overlayTimeline.style.opacity = "1";
+        
+        const pathProgress = (p - 0.78) / 0.10; // 0.0 to 1.0
+        const offset = pathTotalLength - (pathProgress * pathTotalLength);
+        timelinePath.style.strokeDashoffset = offset;
+
+        // Position tracking marker on the curve
+        const point = timelinePath.getPointAtLength(pathProgress * pathTotalLength);
+        timelineMarker.setAttribute("cx", point.x);
+        timelineMarker.setAttribute("cy", point.y);
+        timelineMarker.style.opacity = "1";
+
+        // Highlight active ticks
+        tickNow.classList.toggle("active", pathProgress >= 0.0);
+        tick24.classList.toggle("active", pathProgress >= 0.33);
+        tick48.classList.toggle("active", pathProgress >= 0.66);
+        tick72.classList.toggle("active", pathProgress >= 0.95);
+      } else {
+        overlayTimeline.style.opacity = "0";
+      }
+
+      // 5. Chapter 7: Warning Payoff & Risk Score (88% to 98% scroll)
+      if (p >= 0.88 && p <= 0.98) {
+        overlayRiskScore.style.opacity = "1";
+        
+        const riskProgress = (p - 0.88) / 0.10; // 0.0 to 1.0
+        const countTo = Math.round(riskProgress * 78);
+        document.getElementById("risk-display-num").innerText = `${countTo}%`;
+      } else {
+        overlayRiskScore.style.opacity = "0";
+      }
+    };
+
+    window.addEventListener("scroll", checkOverlayStates, { passive: true });
   </script>
 </body>
 </html>
