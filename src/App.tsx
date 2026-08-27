@@ -7,13 +7,12 @@ import { ParameterGrid } from './components/RiskParameters/ParameterGrid';
 import { ChartsGrid } from './components/Charts/ChartsGrid';
 import { AlertsList } from './components/Alerts/AlertsList';
 import { DistrictTable } from './components/Districts/DistrictTable';
-import { RiskSimulator } from './components/RiskParameters/RiskSimulator';
 import { Methodology } from './components/Methodology';
 import { Footer } from './components/Footer';
 import { getFullStateProfile } from './data/mockData';
 import { 
   LayoutDashboard, 
-  Map as MapIcon, 
+  Map, 
   Bell, 
   Cpu, 
   Info, 
@@ -149,26 +148,26 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#061521] flex flex-row font-sans antialiased text-[#F4F7FA] relative">
+    <div className="min-h-screen bg-bgDark flex flex-row font-sans antialiased text-textWhite relative">
       
-      {/* 1. LEFT SIDEBAR NAVIGATION PANEL (Quiet rail navigation) */}
-      <aside className="hidden lg:flex flex-col w-20 xl:w-24 shrink-0 border-r border-white/5 bg-[#061521]/90 backdrop-blur-md sticky top-0 h-screen justify-between items-center py-6 z-30">
+      {/* 1. LEFT SIDEBAR NAVIGATION PANEL */}
+      <aside className="hidden lg:flex flex-col w-20 xl:w-24 shrink-0 border-r border-white/10 bg-bgDark/45 backdrop-blur-md sticky top-0 h-screen justify-between items-center py-6 z-30">
         
         {/* Top Logo Shield */}
         <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => handleScrollTo('dashboard')}>
-          <div className="flex items-center justify-center w-8 h-8 rounded bg-tealAccent/10 border border-tealAccent/20 text-tealAccent">
-            <ShieldAlert className="w-4 h-4" />
+          <div className="relative flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-tealAccent/20 to-tealAccent/5 border border-tealAccent/30 text-tealAccent">
+            <ShieldAlert className="w-5 h-5" />
           </div>
         </div>
 
         {/* Center Icons Menu list */}
-        <nav className="flex flex-col gap-6 w-full px-1">
+        <nav className="flex flex-col gap-6 w-full px-2">
           {[
             { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-            { id: 'risk-map', label: 'Risk Map', icon: MapIcon },
+            { id: 'risk-map', label: 'Risk Map', icon: Map },
             { id: 'alerts', label: 'Alerts', icon: Bell },
-            { id: 'methodology', label: 'Methods', icon: Cpu },
-            { id: 'footer', label: 'About', icon: Info }
+            { id: 'methodology', label: 'Methodology', icon: Cpu },
+            { id: 'footer', label: 'About Us', icon: Info }
           ].map(tab => {
             const Icon = tab.icon;
             const isAct = activeTab === tab.id;
@@ -176,18 +175,15 @@ const App: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => handleTabClick(tab.id)}
-                className={`w-full py-3.5 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 group relative ${
+                className={`w-full py-2.5 flex flex-col items-center justify-center gap-1 rounded-xl transition-all duration-200 group relative ${
                   isAct 
-                    ? 'text-tealAccent bg-tealAccent/5' 
-                    : 'text-[#8FA6B8] hover:text-textWhite hover:bg-white/3'
+                    ? 'text-tealAccent bg-tealAccent/10' 
+                    : 'text-textMuted hover:text-textWhite hover:bg-white/5'
                 }`}
                 title={tab.label}
               >
-                {isAct && (
-                  <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-tealAccent" />
-                )}
-                <Icon className="w-4.5 h-4.5" />
-                <span className="text-[8px] uppercase tracking-widest font-extrabold">{tab.label}</span>
+                <Icon className="w-5 h-5" />
+                <span className="text-[8px] uppercase tracking-wide font-bold">{tab.label.split(' ')[0]}</span>
               </button>
             );
           })}
@@ -195,11 +191,11 @@ const App: React.FC = () => {
 
         {/* Bottom System Status pulse */}
         <div className="flex flex-col items-center gap-1">
-          <span className="relative flex h-2 w-2">
+          <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
           </span>
-          <span className="text-[7px] text-green-500 font-bold uppercase tracking-widest mt-1">ONLINE</span>
+          <span className="text-[8px] text-green-500 font-extrabold uppercase tracking-widest mt-1">SYSTEM ONLINE</span>
         </div>
       </aside>
 
@@ -210,14 +206,13 @@ const App: React.FC = () => {
         <Navbar 
           onScrollTo={handleScrollTo} 
           lastUpdated={stateProfile.lastUpdated} 
-          activeTab={activeTab}
         />
 
         {/* Core Layout Grid */}
-        <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-12">
+        <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-10">
           
           {/* Main Map + Details Selection Section */}
-          <div id="dashboard" className="grid grid-cols-1 lg:grid-cols-12 gap-8 scroll-mt-20">
+          <div id="dashboard" className="grid grid-cols-1 lg:grid-cols-12 gap-6 scroll-mt-20">
             
             {/* Left Side: Map visualization block */}
             <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-6">
@@ -234,8 +229,8 @@ const App: React.FC = () => {
                 />
               </div>
 
-              {/* Stats strip below map (Clean, flat, borderless card) */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-4 border-y border-white/5 my-1">
+              {/* Stats strip below map */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-5 glass-panel border-white/8 bg-panelBg/40">
                 {[
                   { label: 'States Monitored', value: '36', detail: 'All India & UTs', icon: BarChart2, color: 'text-tealAccent' },
                   { label: 'High-Risk Regions', value: '8', detail: 'North-East Focus', icon: ShieldAlert, color: 'text-saffronAccent' },
@@ -243,14 +238,14 @@ const App: React.FC = () => {
                   { label: 'Telemetry Sync', value: 'Every 3h', detail: 'Live Telemetry API', icon: RefreshCw, color: 'text-textWhite' }
                 ].map((stat, idx) => (
                   <div key={idx} className="flex items-start gap-2.5">
-                    <div className="p-1 rounded bg-white/3 border border-white/5 mt-0.5 text-[#8FA6B8]">
-                      <stat.icon className={`w-3.5 h-3.5 ${stat.color}`} />
+                    <div className="p-1.5 rounded-lg bg-white/5 border border-white/8 mt-0.5">
+                      <stat.icon className={`w-4 h-4 ${stat.color}`} />
                     </div>
                     <div>
-                      <span className="text-[9px] text-[#8FA6B8] uppercase font-bold tracking-wider block">
+                      <span className="text-[9px] text-textMuted uppercase font-bold tracking-wider block">
                         {stat.label}
                       </span>
-                      <span className="text-sm font-black text-textWhite block font-mono mt-0.5">
+                      <span className="text-base font-black text-textWhite block font-mono mt-0.5">
                         {stat.value}
                       </span>
                     </div>
@@ -272,7 +267,7 @@ const App: React.FC = () => {
               />
 
               {/* State Risk profile cards */}
-              <div className="flex-1 mt-2">
+              <div className="flex-1">
                 <StateDetailsPanel profile={stateProfile} />
               </div>
 
@@ -280,23 +275,22 @@ const App: React.FC = () => {
 
           </div>
 
-          {/* Telemetry Matrix Section */}
-          <div className="border-t border-white/5 pt-8">
+          {/* Parameters grid */}
+          <div>
             <ParameterGrid profile={stateProfile} />
           </div>
 
-          {/* Risk Simulator Sandbox Module */}
-          <div className="border-t border-white/5 pt-8">
-            <RiskSimulator />
-          </div>
-
           {/* Charts panel */}
-          <div className="border-t border-white/5 pt-8">
+          <div>
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold tracking-wide text-textWhite">Analytics Dashboard — {stateProfile.name}</h3>
+              <p className="text-xs text-textMuted mt-0.5">Statistical forecast graphs and parameter weights</p>
+            </div>
             <ChartsGrid profile={stateProfile} />
           </div>
 
           {/* Live Alerts and District Table */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 border-t border-white/5 pt-8 scroll-mt-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 scroll-mt-20">
             
             {/* Live Alerts (Left) */}
             <div id="alerts" className="lg:col-span-5 xl:col-span-6 h-full">
@@ -314,7 +308,7 @@ const App: React.FC = () => {
           </div>
 
           {/* Methodology */}
-          <div id="methodology" className="border-t border-white/5 pt-8 scroll-mt-20">
+          <div id="methodology" className="scroll-mt-20">
             <Methodology />
           </div>
 
@@ -330,18 +324,18 @@ const App: React.FC = () => {
         {toasts.map(toast => (
           <div 
             key={toast.id}
-            className="flex items-center gap-3 p-3 rounded border bg-[#0B2030]/95 backdrop-blur border-white/10 text-xs text-textWhite shadow-2xl animate-slideIn pointer-events-auto w-80"
+            className="flex items-center gap-3 p-3.5 rounded-xl border bg-panelBg/95 backdrop-blur border-white/15 text-xs text-textWhite shadow-2xl animate-slideIn pointer-events-auto w-80"
           >
             {toast.type === 'success' ? (
-              <div className="p-1 rounded bg-tealAccent/10 text-tealAccent border border-tealAccent/20">
+              <div className="p-1 rounded bg-tealAccent/20 text-tealAccent">
                 <ShieldCheck className="w-4 h-4" />
               </div>
             ) : (
-              <div className="p-1 rounded bg-white/5 text-[#8FA6B8] border border-white/5">
+              <div className="p-1 rounded bg-white/10 text-textMuted">
                 <Info className="w-4 h-4" />
               </div>
             )}
-            <p className="font-bold leading-snug flex-1">{toast.message}</p>
+            <p className="font-semibold leading-snug flex-1">{toast.message}</p>
           </div>
         ))}
       </div>

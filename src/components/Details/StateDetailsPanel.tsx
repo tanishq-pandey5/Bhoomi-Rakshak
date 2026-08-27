@@ -5,11 +5,13 @@ import {
   TrendingUp, 
   TrendingDown, 
   Minus, 
+  Calendar, 
   Clock, 
   Info, 
   AlertTriangle,
   Brain,
   Layers,
+  Thermometer,
   Compass,
   X,
   CloudRain,
@@ -30,11 +32,11 @@ export const StateDetailsPanel: React.FC<StateDetailsPanelProps> = ({ profile })
   const getTrendIcon = () => {
     switch (profile.riskTrend) {
       case 'Rising':
-        return <TrendingUp className="w-3.5 h-3.5 text-riskVeryHigh animate-pulse" />;
+        return <TrendingUp className="w-4 h-4 text-riskVeryHigh" />;
       case 'Falling':
-        return <TrendingDown className="w-3.5 h-3.5 text-riskVeryLow" />;
+        return <TrendingDown className="w-4 h-4 text-riskVeryLow" />;
       default:
-        return <Minus className="w-3.5 h-3.5 text-textMuted" />;
+        return <Minus className="w-4 h-4 text-textMuted" />;
     }
   };
 
@@ -54,7 +56,7 @@ export const StateDetailsPanel: React.FC<StateDetailsPanelProps> = ({ profile })
       } else if (key === 'soilMoisture') {
         name = 'Soil Moisture';
         Icon = Droplets;
-        color = 'text-tealAccent';
+        color = 'text-riskLow';
       } else if (key === 'slope') {
         name = 'Slope Angle';
         Icon = Triangle;
@@ -62,133 +64,166 @@ export const StateDetailsPanel: React.FC<StateDetailsPanelProps> = ({ profile })
       } else if (key === 'sensorVibration') {
         name = 'Recent Vibration';
         Icon = Activity;
-        color = 'text-riskCritical';
+        color = 'text-riskVeryHigh';
       } else if (key === 'historicalEvents') {
         name = 'Historical Slides';
         Icon = Clock;
-        color = 'text-saffronAccent';
+        color = 'text-riskVeryHigh';
       } else if (key === 'lithology') {
         name = 'Lithology';
         Icon = Layers;
-        color = 'text-textMuted';
+        color = 'text-riskLow';
       }
 
       return { name, val, Icon, color };
     });
   };
 
-  const drivers = getDriversList().slice(0, 5); // top 5 drivers
+  const drivers = getDriversList().slice(0, 4); // top 4 drivers
+
+  // Circular gauge SVG calculations
+  const radius = 62;
+  const innerRadius = radius - 12;
+  const strokeWidth = 12;
+  const circumference = 2 * Math.PI * innerRadius;
+  const strokeDashoffset = circumference - (profile.riskPercentage / 100) * circumference;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full py-1">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-5 w-full h-full">
       
-      {/* Left Column: Premium Risk Score Readout */}
-      <div className="flex flex-col justify-between pr-0 md:pr-6 md:border-r md:border-white/10">
-        <div className="flex flex-col gap-4">
-          <div>
-            <span className="text-[9px] text-textMuted uppercase font-bold tracking-widest block">
-              Hazard Outlook
-            </span>
-            <h3 className="text-5xl sm:text-6xl font-black tracking-tight mt-1 font-mono leading-none" style={{ color: riskColor }}>
+      {/* CARD 1: Selected State Risk Profile */}
+      <div className="glass-panel p-5 flex flex-col gap-4 border border-white/12 justify-between">
+        <div>
+          <span className="text-[10px] text-textMuted uppercase font-bold tracking-widest block">
+            Selected State Risk Profile
+          </span>
+          <h2 className="text-2xl font-black text-textWhite tracking-tight mt-1 uppercase">
+            {profile.name}
+          </h2>
+          <span className="text-[10px] text-textMuted font-medium block mt-0.5">
+            {profile.region} Region
+          </span>
+          
+          <div className="flex items-baseline gap-2 mt-4">
+            <span className="text-4xl font-black font-mono" style={{ color: riskColor }}>
               {profile.riskPercentage}%
-            </h3>
-            
-            <div className="flex items-center gap-2 mt-3">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded" style={{ backgroundColor: `${riskColor}12`, color: riskColor, border: `1px solid ${riskColor}25` }}>
+            </span>
+            <div className="flex flex-col">
+              <span className="text-xs font-black uppercase tracking-wide" style={{ color: riskColor }}>
                 {profile.riskLevel} Risk
               </span>
-              <span className="text-[10px] text-textMuted flex items-center gap-1">
+              <span className="text-[10px] text-textMuted flex items-center gap-1 mt-0.5">
                 {getTrendIcon()}
                 <span className="capitalize">{profile.riskTrend} Trend</span>
               </span>
             </div>
-            
-            <h2 className="text-2xl font-black text-textWhite tracking-tight mt-5 uppercase">
-              {profile.name}
-            </h2>
-            <span className="text-[10px] text-textMuted font-bold uppercase tracking-wider block mt-0.5">
-              72-Hour Outlook • {profile.region} Region
-            </span>
           </div>
 
-          {/* Minimal Advisory alert box */}
+          <div className="flex items-center gap-1.5 text-[10px] text-tealAccent font-semibold mt-3">
+            <Calendar className="w-3.5 h-3.5" />
+            <span>Forecast Valid for next 72 hours</span>
+          </div>
+
+          {/* Warning Advisory box */}
           <div 
-            className="p-3 border-l-2 text-[11px] leading-relaxed flex gap-2.5 bg-white/2"
+            className="mt-4 p-3 rounded-xl border text-[11px] leading-relaxed flex gap-2"
             style={{ 
-              borderColor: riskColor,
+              backgroundColor: `${riskColor}0A`, 
+              borderColor: `${riskColor}22`,
               color: '#F5F7FA'
             }}
           >
             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: riskColor }} />
-            <p className="font-semibold text-textWhite">{profile.alertMessage}</p>
+            <p className="font-medium text-textWhite">{profile.alertMessage}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-[9px] text-textMuted mt-4 pt-3 border-t border-white/5">
-          <Clock className="w-3.5 h-3.5" />
-          <span>Updated {profile.lastUpdated}</span>
+        <div className="flex justify-between items-center text-[9px] text-textMuted pt-2 border-t border-white/5 mt-auto">
+          <span className="flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            Updated {profile.lastUpdated}
+          </span>
         </div>
       </div>
 
-      {/* Right Column: Why This Risk? Contributors */}
-      <div className="flex flex-col justify-between pl-0 md:pl-2">
-        <div className="flex flex-col gap-4">
-          <div>
-            <span className="text-[9px] text-textMuted uppercase font-bold tracking-widest block">
-              Risk Diagnostics
-            </span>
-            <h3 className="text-base font-extrabold text-textWhite uppercase tracking-wide mt-1">
-              Why This Risk?
-            </h3>
-            <span className="text-[10px] text-textMuted font-medium block mt-0.5">
-              Relative feature weight contributions to predicted landslide hazard
-            </span>
-          </div>
+      {/* CARD 2: Risk Score & Circular Gauge */}
+      <div className="glass-panel p-5 flex flex-col justify-between border border-white/12 gap-4">
+        <div>
+          <span className="text-[10px] text-textMuted uppercase font-bold tracking-widest block">
+            Risk Score
+          </span>
+          
+          <div className="flex flex-row items-center justify-between gap-4 mt-3">
+            
+            {/* Circle progress gauge */}
+            <div className="relative flex items-center justify-center w-28 h-28 shrink-0">
+              <svg className="w-28 h-28 transform -rotate-90">
+                <circle
+                  cx="56"
+                  cy="56"
+                  r={innerRadius}
+                  stroke="rgba(255, 255, 255, 0.05)"
+                  strokeWidth={strokeWidth - 2}
+                  fill="transparent"
+                />
+                <circle
+                  cx="56"
+                  cy="56"
+                  r={innerRadius}
+                  stroke={riskColor}
+                  strokeWidth={strokeWidth - 2}
+                  fill="transparent"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                  className="transition-all duration-1000 ease-out"
+                />
+              </svg>
+              <div className="absolute flex flex-col items-center justify-center">
+                <span className="text-xl font-black text-textWhite font-mono leading-none">
+                  {profile.riskPercentage}%
+                </span>
+                <span className="text-[8px] text-textMuted uppercase font-bold tracking-wider mt-0.5">
+                  Index
+                </span>
+              </div>
+            </div>
 
-          {/* Horizontal flat progress indicators */}
-          <div className="flex flex-col gap-3">
-            {drivers.map((drv, idx) => {
-              const Icon = drv.Icon;
-              return (
-                <div key={idx} className="flex flex-col gap-1.5">
-                  <div className="flex justify-between items-center text-xs font-semibold text-textWhite">
-                    <span className="flex items-center gap-2">
+            {/* Drivers list on the right */}
+            <div className="flex-1 flex flex-col gap-2">
+              <span className="text-[9px] text-textMuted uppercase font-bold tracking-wider block">
+                Primary Risk Drivers
+              </span>
+              <div className="flex flex-col gap-1.5">
+                {drivers.map((drv, idx) => {
+                  const Icon = drv.Icon;
+                  return (
+                    <div key={idx} className="flex items-center gap-2 text-[10px] text-textWhite">
                       <Icon className={`w-3.5 h-3.5 ${drv.color}`} />
-                      <span>{drv.name}</span>
-                    </span>
-                    <span className="font-mono text-textMuted">{drv.val}%</span>
-                  </div>
-                  {/* Subtle flat progress track */}
-                  <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full rounded-full transition-all duration-1000"
-                      style={{ 
-                        width: `${drv.val}%`, 
-                        backgroundColor: drv.color.includes('teal') ? 'var(--teal)' : riskColor
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              );
-            })}
+                      <span className="font-semibold">{drv.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
           </div>
         </div>
 
-        <div className="mt-6 pt-3 border-t border-white/5 flex items-center justify-between">
+        <div className="flex justify-between items-center text-[10px] pt-2 border-t border-white/5 mt-auto">
           <button 
             onClick={() => setShowModal(true)}
-            className="text-[11px] font-bold text-tealAccent hover:underline flex items-center gap-1.5 transition-all"
+            className="text-left text-xs font-bold text-tealAccent hover:underline flex items-center gap-1"
           >
-            <Brain className="w-3.5 h-3.5" />
-            <span>How is this calculated?</span>
+            How is this calculated?
           </button>
         </div>
       </div>
 
       {/* METHODOLOGY EXPLANATION MODAL */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#051321]/85 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-[#0B2030] border border-white/10 rounded-xl w-full max-w-lg p-6 relative flex flex-col shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-bgDark/85 backdrop-blur-sm animate-fadeIn">
+          <div className="glass-panel border-white/20 w-full max-w-lg p-6 relative flex flex-col shadow-2xl">
             
             {/* Close Button */}
             <button 
@@ -199,13 +234,13 @@ export const StateDetailsPanel: React.FC<StateDetailsPanelProps> = ({ profile })
             </button>
 
             {/* Modal Header */}
-            <div className="flex items-center gap-3 border-b border-white/8 pb-4 mb-4">
-              <div className="p-2 rounded bg-tealAccent/10 border border-tealAccent/20 text-tealAccent">
+            <div className="flex items-center gap-3 border-b border-white/10 pb-4 mb-4">
+              <div className="p-2 rounded-xl bg-tealAccent/15 border border-tealAccent/20 text-tealAccent">
                 <Brain className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-textWhite uppercase tracking-wide">Landslide Risk Calculation</h3>
-                <p className="text-[10px] text-textMuted uppercase font-semibold">Bhoomi Rakshak ML Prediction Pipeline v2.0</p>
+                <h3 className="text-lg font-bold text-textWhite">Landslide Risk Calculation</h3>
+                <p className="text-xs text-textMuted">Bhoomi Rakshak ML Prediction Pipeline v2.0</p>
               </div>
             </div>
 
@@ -216,27 +251,27 @@ export const StateDetailsPanel: React.FC<StateDetailsPanelProps> = ({ profile })
               </p>
 
               <div className="flex flex-col gap-2 mt-2">
-                <span className="text-[9px] uppercase font-bold text-textWhite tracking-wider block mb-1">
+                <span className="text-[10px] uppercase font-bold text-textWhite tracking-wider block">
                   Model Feature Weights Configuration
                 </span>
                 
                 {[
-                  { name: 'Rainfall Indicators (35%)', desc: 'Precipitation intensity, 24-hour weight, 7-day accumulation and 72-hour forecast overlays.', icon: CloudRain },
-                  { name: 'Soil & Terrain Saturation (25%)', desc: 'Telemetry sensor soil moisture %, clay depth profiles, and drainage flow densities.', icon: Droplets },
+                  { name: 'Rainfall Indicators (35%)', desc: 'Precipitation intensity, 24-hour weight, 7-day accumulation and 72-hour forecast overlays.', icon: Thermometer },
+                  { name: 'Soil & Terrain Saturation (25%)', desc: 'Telemetry sensor soil moisture %, clay depth profiles, and drainage flow densities.', icon: Layers },
                   { name: 'Slope Topography (20%)', desc: 'Physics-based shear stress calculations matching slope angle and local elevations.', icon: Compass },
                   { name: 'Seismic Telemetry & Historical (20%)', desc: 'Real-time telemetry geophone sensor micro-vibrations and previous slide incidents.', icon: AlertTriangle }
                 ].map((wt, idx) => (
-                  <div key={idx} className="flex gap-3 p-2.5 rounded bg-white/3 border border-white/5">
+                  <div key={idx} className="flex gap-3 p-2.5 rounded-lg bg-white/5 border border-white/8">
                     <wt.icon className="w-4 h-4 text-tealAccent mt-0.5 shrink-0" />
                     <div>
-                      <span className="font-semibold text-textWhite block text-[11px]">{wt.name}</span>
+                      <span className="font-semibold text-textWhite block">{wt.name}</span>
                       <span className="text-[10px] mt-0.5 block">{wt.desc}</span>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-3 p-3 rounded border border-tealAccent/20 bg-tealAccent/5 flex gap-2">
+              <div className="mt-3 p-3 rounded-lg border border-tealAccent/20 bg-tealAccent/5 flex gap-2">
                 <Info className="w-4 h-4 text-tealAccent shrink-0 mt-0.5" />
                 <p className="text-[10px] text-tealAccent leading-normal">
                   <strong>Prediction Confidence:</strong> The model currently reports a 94.2% Area Under Curve (AUC) score based on testing against 800+ historical landslide events in the Western Ghats and Himalayan regions.
