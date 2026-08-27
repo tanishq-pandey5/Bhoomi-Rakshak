@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bhoomi Rakshak: AI-Powered 72-Hour Landslide Prediction</title>
+<style>
+  :root {
+    --bg: #051321;
+    --teal: #16B8A6;
+    --teal-bright: #20E9D2;
+    --saffron: #FF9F43;
+    --text: #F5F7FA;
+    --text-dim: rgba(245, 247, 250, 0.6);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: auto; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* ── loader ── */
+  #loader {
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 28px;
+    transition: opacity 0.8s ease;
+  }
+  #loader.done { opacity: 0; pointer-events: none; }
+  #loader .mark {
+    font-size: 15px; letter-spacing: 0.5em; text-indent: 0.5em;
+    color: var(--teal); text-transform: uppercase; font-weight: 800;
+  }
+  #loader .bar {
+    width: 180px; height: 2px; background: rgba(22, 184, 166, 0.15);
+    overflow: hidden; position: relative;
+    border-radius: 100px;
+  }
+  #loader .bar i {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 0%;
+    background: var(--teal); display: block;
+    transition: width 0.2s ease;
+  }
+
+  /* ── scroll stage ── */
+  #track { height: 900vh; position: relative; }
+  #stage {
+    position: sticky; top: 0; height: 100vh; width: 100%;
+    overflow: hidden;
+  }
+  #film {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    display: block;
+  }
+  #vignette {
+    position: absolute; inset: 0; z-index: 5; pointer-events: none;
+    background:
+      radial-gradient(ellipse 62% 68% at 50% 50%, transparent 50%, rgba(5, 19, 33, 0.95) 98%),
+      linear-gradient(to right, rgba(5, 19, 33, 0.95), transparent 18%, transparent 82%, rgba(5, 19, 33, 0.95));
+  }
+
+  /* ── captions ── */
+  .caption {
+    position: absolute; z-index: 10;
+    opacity: 0; pointer-events: none;
+    will-change: opacity, transform;
+    width: 86%;
+    max-width: 800px;
+  }
+  .caption h1 {
+    font-size: clamp(38px, 6.5vw, 86px);
+    font-weight: 900; letter-spacing: -0.03em; line-height: 1.02;
+    text-transform: uppercase;
+  }
+  .caption h2 {
+    font-size: clamp(28px, 4vw, 56px);
+    font-weight: 800; letter-spacing: -0.02em; line-height: 1.05;
+  }
+  .caption p {
+    margin-top: 14px;
+    font-size: clamp(14px, 1.3vw, 19px);
+    color: var(--text-dim); font-weight: 500; letter-spacing: 0.01em;
+    max-width: 42ch;
+    line-height: 1.5;
+  }
+  .caption .teal { color: var(--teal-bright); }
+  .caption .saffron { color: var(--saffron); }
+
+  .cap-center { left: 50%; top: 50%; transform: translate(-50%, -50%); text-align: center; }
+  .cap-center p { margin-left: auto; margin-right: auto; }
+  .cap-left { left: 8vw; top: 50%; transform: translateY(-50%); }
+  .cap-right { right: 8vw; top: 50%; transform: translateY(-50%); text-align: right; }
+  .cap-right p { margin-left: auto; }
+  .cap-top { left: 50%; top: 12vh; transform: translateX(-50%); text-align: center; }
+  .cap-bottom { left: 50%; bottom: 10vh; transform: translateX(-50%); text-align: center; }
+
+  #scroll-cue {
+    position: absolute; bottom: 4.5vh; left: 50%; transform: translateX(-50%);
+    z-index: 10; display: flex; flex-direction: column; align-items: center; gap: 10px;
+    color: var(--text-dim); font-size: 11px; letter-spacing: 0.35em; text-indent: 0.35em;
+    text-transform: uppercase; font-weight: 700;
+    transition: opacity 0.5s ease;
+  }
+  #scroll-cue::after {
+    content: ""; width: 1px; height: 34px;
+    background: linear-gradient(to bottom, var(--teal), transparent);
+    animation: cue 1.8s ease-in-out infinite;
+  }
+  @keyframes cue {
+    0%, 100% { transform: translateY(0); opacity: 1; }
+    50% { transform: translateY(8px); opacity: 0.3; }
+  }
+
+  /* ── CTA buttons ── */
+  .cta {
+    margin-top: 30px; pointer-events: auto;
+    display: inline-block;
+    padding: 13px 36px;
+    border: 1px solid var(--teal);
+    border-radius: 100px;
+    color: var(--teal-bright); text-decoration: none;
+    font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700;
+    transition: all 0.3s ease;
+  }
+  .cta:hover { background: var(--teal); color: var(--bg); transform: scale(1.05); }
+
+  /* ── sticky nav (appears after film) ── */
+  #brandnav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 80;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 5vw;
+    background: color-mix(in srgb, var(--bg) 80%, transparent);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    opacity: 0; pointer-events: none; transform: translateY(-8px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  #brandnav.on { opacity: 1; pointer-events: auto; transform: none; }
+  #brandnav .mark { letter-spacing: 0.3em; text-indent: 0.3em; font-size: 13px; color: var(--teal); text-transform: uppercase; font-weight: 900; }
+  #brandnav .links { display: flex; gap: 2.5vw; }
+  #brandnav a { color: var(--text-dim); text-decoration: none; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700; transition: color 0.25s; }
+  #brandnav a:hover { color: var(--text); }
+  #brandnav .navcta { border: 1px solid var(--teal); border-radius: 100px; padding: 7px 18px; color: var(--teal-bright); }
+  #brandnav .navcta:hover { background: var(--teal); color: var(--bg); }
+
+  /* ── brand sections chrome ── */
+  .bp { position: relative; padding: 12vh 6vw; max-width: 1400px; margin: 0 auto; }
+  .bp .kicker { font-size: 10px; letter-spacing: 0.35em; text-transform: uppercase; color: var(--teal); margin-bottom: 16px; font-weight: 800; }
+  .bp h2 { font-weight: 900; letter-spacing: -0.03em; line-height: 1.05; font-size: clamp(32px, 4.4vw, 64px); text-transform: uppercase; }
+  .bp p.lead { color: var(--text-dim); font-size: clamp(14px, 1.25vw, 18px); line-height: 1.65; max-width: 44ch; margin-top: 14px; }
+  [data-reveal] { opacity: 0; transform: translateY(22px); transition: opacity 0.8s cubic-bezier(.2,.6,.2,1), transform 0.8s cubic-bezier(.2,.6,.2,1); }
+  [data-reveal].in { opacity: 1; transform: none; }
+
+  .bp-split { display: grid; grid-template-columns: 1fr 1fr; gap: 6vw; align-items: center; }
+  .bp-split img { width: 100%; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1);
+    -webkit-mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 70%, transparent 100%);
+    mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 70%, transparent 100%); }
+  .bp-split.flip > :first-child { order: 2; }
+  @media (max-width: 800px) { .bp-split { grid-template-columns: 1fr; } .bp-split.flip > :first-child { order: 0; } }
+
+  .bp-manifesto { text-align: center; padding: 20vh 6vw; }
+  .bp-manifesto h2 { font-size: clamp(38px, 6.5vw, 92px); max-width: 18ch; margin: 0 auto; }
+
+  .bp-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 8vw; text-align: center; }
+  .bp-stats .num { font-weight: 900; letter-spacing: -0.02em; font-size: clamp(36px, 5.5vw, 72px); color: var(--teal); font-family: monospace; }
+  .bp-stats .lbl { margin-top: 6px; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); font-weight: 700; }
+
+  .bp-specs table { width: 100%; max-width: 760px; margin: 0 auto; border-collapse: collapse; }
+  .bp-specs td { padding: 16px 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); font-size: clamp(13px, 1.2vw, 16px); font-weight: 500; }
+  .bp-specs td:first-child { color: var(--text-dim); letter-spacing: 0.12em; text-transform: uppercase; font-size: 11px; font-weight: 700; }
+  .bp-specs td:last-child { text-align: right; color: var(--text); font-family: monospace; }
+
+  .bp-quote { text-align: center; max-width: 38ch; margin: 0 auto; padding: 10vh 24px; }
+  .bp-quote blockquote { font-size: clamp(20px, 2.5vw, 36px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.3; color: var(--text); }
+  .bp-quote cite { display: block; margin-top: 22px; font-style: normal; font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); font-weight: 800; }
+
+  .bp-gallery { display: grid; grid-template-columns: repeat(12, 1fr); gap: 18px; }
+  .bp-gallery img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08); }
+  .bp-gallery .g1 { grid-column: span 7; aspect-ratio: 4/3; }
+  .bp-gallery .g2 { grid-column: span 5; aspect-ratio: 4/5; }
+  .bp-gallery .g3 { grid-column: span 5; aspect-ratio: 1/1; }
+  .bp-gallery .g4 { grid-column: span 7; aspect-ratio: 16/10; }
+  @media (max-width: 800px) { .bp-gallery img { grid-column: span 12 !important; } }
+
+  .bp-ctaband { text-align: center; padding: 18vh 6vw; }
+
+  footer.bp-footer { border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 8vh 6vw 5vh; }
+  .bp-footer .cols { display: grid; grid-template-columns: 2fr repeat(3, 1fr); gap: 5vw; max-width: 1400px; margin: 0 auto; }
+  .bp-footer h4 { font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 16px; font-weight: 800; }
+  .bp-footer a { display: block; color: var(--text-dim); text-decoration: none; font-size: 13px; margin-bottom: 10px; font-weight: 550; transition: color 0.25s; }
+  .bp-footer a:hover { color: var(--text); }
+  .bp-footer .fine { margin-top: 6vh; text-align: center; font-size: 10px; letter-spacing: 0.2em; color: rgba(255, 255, 255, 0.25); text-transform: uppercase; font-weight: 700; }
+  @media (max-width: 800px) { .bp-footer .cols { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+
+  <!-- Loader Overlay -->
+  <div id="loader">
+    <div class="mark">Bhoomi Rakshak</div>
+    <div class="bar"><i id="loadbar"></i></div>
+  </div>
+
+  <!-- Scroll-Scrubber Canvas Track -->
+  <div id="track">
+    <div id="stage">
+      <canvas id="film"></canvas>
+      <div id="vignette"></div>
+
+      <!-- Chap 1 Intro -->
+      <div class="caption cap-center" data-in="-0.05" data-hold="0.05" data-out="0.18">
+        <h1>BHOOMI <span class="teal">RAKSHAK</span></h1>
+        <p>AI-powered 72-hour landslide prediction and early-warning system.<br>Early Signals. Safer Hills.</p>
+      </div>
+
+      <!-- Chap 2 Telemetry -->
+      <div class="caption cap-left" data-in="0.18" data-hold="0.28" data-out="0.38">
+        <h2>Continuous<br>Telemetry Node Arrays.</h2>
+        <p>Monitoring local precipitation levels, soil saturation, and geophone micro-vibrations in real-time.</p>
+      </div>
+
+      <!-- Chap 3 Saturation -->
+      <div class="caption cap-right" data-in="0.38" data-hold="0.48" data-out="0.58">
+        <h2>Geomechanical<br><span class="teal">Saturation Mapping</span></h2>
+        <p>Analyzing clay friction parameters and geological safety factors under heavy monsoonal rain.</p>
+      </div>
+
+      <!-- Chap 4 Collapse -->
+      <div class="caption cap-left" data-in="0.58" data-hold="0.68" data-out="0.78">
+        <h2>Slope Displacement<br>Forecasting.</h2>
+        <p>Gradient Boosting Classifiers predict geotechnical structural failures up to 72 hours in advance.</p>
+      </div>
+
+      <!-- Chap 5 Warning -->
+      <div class="caption cap-right" data-in="0.78" data-hold="0.88" data-out="0.98">
+        <h2>Early Warning<br><span class="saffron">Broadcast.</span></h2>
+        <p>Triggering solar-powered sirens and geofenced warnings to shield vulnerable mountain populations.</p>
+      </div>
+
+      <!-- Outro CTA -->
+      <div class="caption cap-center" data-in="0.92" data-hold="0.98" data-out="1.1">
+        <h1>BHOOMI <span class="teal">RAKSHAK</span></h1>
+        <p>Early Signals. Safer Hills.</p>
+        <a class="cta" href="#story">Explore Story</a>
+        <a class="cta" style="margin-left:12px; border-color:var(--saffron); color:var(--saffron);" href="/vanilla/index.html">Simulation Sandbox</a>
+      </div>
+
+      <div id="scroll-cue">Scroll</div>
+    </div>
+  </div>
+
+  <!-- Sticky Navbar (reveals on scroll below the film) -->
+  <nav id="brandnav">
+    <span class="mark">Bhoomi Rakshak</span>
+    <div class="links">
+      <a href="#story">Story</a>
+      <a href="#craft">Craft</a>
+      <a href="#specs">Specs</a>
+      <a href="#gallery">Gallery</a>
+    </div>
+    <a class="navcta" href="/vanilla/index.html">Sandbox Dashboard</a>
+  </nav>
+
+  <!-- Outro Full Brand Page Section -->
+  <div id="outro-brand-page">
+    
+    <!-- Manifesto -->
+    <section class="bp bp-manifesto" id="story">
+      <div data-reveal>
+        <p class="kicker">Bhoomi Rakshak</p>
+        <h2>A predictive operational shield for mountain communities.</h2>
+      </div>
+    </section>
+
+    <!-- Origin story split -->
+    <section class="bp">
+      <div class="bp-split">
+        <div data-reveal>
+          <p class="kicker">Origin</p>
+          <h2>Why Bhoomi Rakshak Exists</h2>
+          <p class="lead">
+            Catastrophic landslides trigger devastation across India's North-Eastern and Himalayan regions every monsoon. Isolated villages are cut off from rescue, costing lives in the latency of reactive search-and-rescue.
+          </p>
+          <p class="lead" style="margin-top: 10px;">
+            Bhoomi Rakshak was built to turn this reactive window into a proactive shield: translating raw geotechnical slope moisture, angle, and vibration metrics into automated early warning signals.
+          </p>
+        </div>
+        <img data-reveal src="frames/frame_0001.webp" alt="Northeast mountains view" />
+      </div>
+    </section>
+
+    <!-- Craft splits -->
+    <section class="bp" id="craft">
+      <div class="bp-split flip">
+        <div data-reveal>
+          <p class="kicker">Geotechnical Craft — 01</p>
+          <h2>Solar-Powered Telemetry Nodes</h2>
+          <p class="lead">
+            Localized sensor arrays are securely anchored deep into vulnerable clay and soil slopes. The nodes measure precipitation intensity, soil moisture %, clay depth profiles, and geophone vibrations.
+          </p>
+          <p class="lead" style="margin-top:10px;">
+            Telemetry syncs securely with cloud endpoints every 3 hours, powering predictive models with zero local grid reliance.
+          </p>
+        </div>
+        <img data-reveal src="frames/frame_0030.webp" alt="Telemetry sensor node" />
+      </div>
+    </section>
+
+    <section class="bp">
+      <div class="bp-split">
+        <div data-reveal>
+          <p class="kicker">Geotechnical Craft — 02</p>
+          <h2>72-Hour ML Hazard Prediction</h2>
+          <p class="lead">
+            A Gradient Boosting Decision Tree (GBDT) model, trained on 50,000 historical slope failure logs, evaluates the 14 terrain parameters concurrently.
+          </p>
+          <p class="lead" style="margin-top: 10px;">
+            The system maps safety factors, alerts responders when displacement and saturation exceed geomechanical limits, and predicts landslide triggers with 94.2% model accuracy.
+          </p>
+        </div>
+        <img data-reveal src="frames/frame_0055.webp" alt="Landslide risk prediction GBDT charts" />
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="bp">
+      <div class="bp-stats">
+        <div data-reveal>
+          <div class="num">36</div>
+          <div class="lbl">States Monitored</div>
+        </div>
+        <div data-reveal>
+          <div class="num">72h</div>
+          <div class="lbl">Predictive Horizon</div>
+        </div>
+        <div data-reveal>
+          <div class="num">94.2%</div>
+          <div class="lbl">Model AUC Score</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Specifications Table -->
+    <section class="bp bp-specs" id="specs">
+      <div data-reveal>
+        <p class="kicker" style="text-align:center">Technical Specifications</p>
+        <table>
+          <tr><td>Telemetry Sync Latency</td><td>Every 3 Hours (Live API)</td></tr>
+          <tr><td>Geophone Vibration Accuracy</td><td>±0.01 mm/s</td></tr>
+          <tr><td>Model Architecture</td><td>Gradient Boosted Decision Tree (GBDT)</td></tr>
+          <tr><td>Emergency Siren Broadcast</td><td>Web Audio API Native / Solar Sirens</td></tr>
+          <tr><td>Regional Viewport Zoom</td><td>D3 GeoOrthographic Projection Map</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- Quote -->
+    <section class="bp bp-quote">
+      <div data-reveal>
+        <blockquote>
+          "Bhoomi Rakshak represents a major leap in climate-tech disaster prevention. By linking live geotechnical telemetry with machine learning, we turn reactive emergency response into proactive, life-saving warnings."
+        </blockquote>
+        <cite>Smart India Hackathon Climate-Tech Labs</cite>
+      </div>
+    </section>
+
+    <!-- Gallery -->
+    <section class="bp" id="gallery">
+      <div class="bp-gallery">
+        <img class="g1" data-reveal src="frames/frame_0010.webp" alt="Misty mountains overview" />
+        <img class="g2" data-reveal src="frames/frame_0035.webp" alt="Sensor telemetry node detail" />
+        <img class="g3" data-reveal src="frames/frame_0070.webp" alt="Slope geomechanical failure" />
+        <img class="g4" data-reveal src="frames/frame_0090.webp" alt="Emergency broadcast tower flashing alerts" />
+      </div>
+    </section>
+
+    <!-- CTA Band -->
+    <section class="bp bp-ctaband">
+      <div data-reveal>
+        <h2>Protecting Hills. Saving Lives.</h2>
+        <p class="lead" style="margin-left: auto; margin-right: auto; margin-bottom: 20px;">
+          Interact with the live early warning ML model and test weather scenarios in our prediction sandbox.
+        </p>
+        <a class="cta" href="/vanilla/index.html">Launch Simulation Sandbox</a>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bp-footer">
+      <div class="cols">
+        <div>
+          <span style="letter-spacing:0.3em;text-transform:uppercase;color:var(--teal);font-size:13px;font-weight:900;">Bhoomi Rakshak</span>
+          <p class="lead" style="margin-top:14px;font-size:12px;">An AI-Powered 72-Hour Landslide Prediction and Early-Warning Platform.</p>
+        </div>
+        <div>
+          <h4>Product</h4>
+          <a href="#story">Story</a>
+          <a href="#craft">Craft</a>
+          <a href="#specs">Specs</a>
+        </div>
+        <div>
+          <h4>Simulation</h4>
+          <a href="/vanilla/index.html">Sandbox</a>
+          <a href="https://github.com/tanishq-pandey5/Bhoomi-Rakshak">GitHub Repo</a>
+          <a href="/vanilla/README.md">API Docs</a>
+        </div>
+        <div>
+          <h4>Support</h4>
+          <a href="#">Care</a>
+          <a href="#">Security</a>
+          <a href="#">Contact</a>
+        </div>
+      </div>
+      <p class="fine">© 2026 Bhoomi Rakshak. A research prototype built for Smart India Hackathon. All simulation frames generated locally.</p>
+    </footer>
+
+  </div>
+
+  <script src="main.js"></script>
+  
+  <script>
+    // Reveal-on-scroll + nav after film
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("in");
+        }
+      }),
+      { threshold: 0.18 }
+    );
+    document.querySelectorAll("[data-reveal]").forEach((el) => io.observe(el));
+    
+    // Fallback scroll reveal
+    const revealNow = () => document.querySelectorAll("[data-reveal]:not(.in)").forEach((el) => {
+      const r = el.getBoundingClientRect();
+      if (r.top < window.innerHeight * 0.92 && r.bottom > 0) {
+        el.classList.add("in");
+      }
+    });
+    window.addEventListener("scroll", revealNow, { passive: true });
+    revealNow();
+    
+    const nav = document.getElementById("brandnav");
+    const getFilmEnd = () => (document.getElementById("track")?.offsetHeight ?? window.innerHeight * 9) - window.innerHeight;
+    window.addEventListener("scroll", () => {
+      nav.classList.toggle("on", window.scrollY > getFilmEnd() * 0.95);
+    }, { passive: true });
+  </script>
+</body>
+</html>
