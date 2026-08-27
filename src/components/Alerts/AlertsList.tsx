@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { liveAlertsData } from '../../data/mockData';
 import type { SystemAlert } from '../../data/mockData';
-import { Bell, ShieldAlert, Info } from 'lucide-react';
+import { ShieldAlert, Info } from 'lucide-react';
 
 interface AlertsListProps {
   onSelectState: (stateName: string) => void;
@@ -16,22 +16,12 @@ export const AlertsList: React.FC<AlertsListProps> = ({ onSelectState }) => {
     return alert.status === statusFilter;
   });
 
-  // Get alert border color
-  const getAlertBorderColor = (severity: SystemAlert['severity']) => {
+  const getSeverityColor = (severity: SystemAlert['severity']) => {
     switch (severity) {
-      case 'Critical': return 'border-l-4 border-l-riskCritical border-white/8';
-      case 'High': return 'border-l-4 border-l-riskHigh border-white/8';
-      case 'Moderate': return 'border-l-4 border-l-riskModerate border-white/8';
-      default: return 'border-l-4 border-l-tealAccent border-white/8';
-    }
-  };
-
-  const getSeverityBadge = (severity: SystemAlert['severity']) => {
-    switch (severity) {
-      case 'Critical': return 'bg-riskCritical/10 text-riskVeryHigh border-riskCritical/20';
-      case 'High': return 'bg-riskHigh/10 text-riskHigh border-riskHigh/20';
-      case 'Moderate': return 'bg-riskModerate/10 text-riskModerate border-riskModerate/20';
-      default: return 'bg-tealAccent/10 text-tealAccent border-tealAccent/20';
+      case 'Critical': return 'var(--risk-red)';
+      case 'High': return 'var(--risk-orange)';
+      case 'Moderate': return 'var(--saffron)';
+      default: return 'var(--teal)';
     }
   };
 
@@ -44,32 +34,31 @@ export const AlertsList: React.FC<AlertsListProps> = ({ onSelectState }) => {
   };
 
   return (
-    <div className="glass-panel p-5 flex flex-col h-full gap-4">
+    <div className="flex flex-col h-full gap-5">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-xl bg-riskVeryHigh/15 border border-riskVeryHigh/20 text-riskVeryHigh animate-pulse">
-            <Bell className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold tracking-wide text-textWhite">Live Threat & Warning Broadcast</h3>
-            <p className="text-xs text-textMuted mt-0.5">Real-time localized regional warnings</p>
-          </div>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/8 pb-4">
+        <div>
+          <span className="text-[9px] tracking-widest text-tealAccent font-bold uppercase block mb-1">
+            Emergency Dispatch
+          </span>
+          <h3 className="text-base font-extrabold text-textWhite uppercase tracking-wide">
+            Active Incident Feed
+          </h3>
         </div>
 
         {/* Status Filters */}
-        <div className="flex items-center gap-1.5 self-stretch sm:self-auto overflow-x-auto pb-1 sm:pb-0">
+        <div className="flex items-center gap-1">
           {(['All', 'Active', 'Monitoring', 'Resolved'] as const).map(status => {
             const isAct = statusFilter === status;
             return (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
-                className={`px-3 py-1 text-xs font-semibold rounded-lg border transition-all duration-200 ${
+                className={`px-2.5 py-1 text-[9px] uppercase tracking-wider font-bold rounded transition-colors ${
                   isAct 
-                    ? 'bg-tealAccent/15 border-tealAccent text-tealAccent' 
-                    : 'bg-white/5 border-white/8 text-textMuted hover:text-textWhite'
+                    ? 'bg-tealAccent text-bgDark' 
+                    : 'bg-[#0B2030] text-textMuted hover:text-textWhite'
                 }`}
               >
                 {status}
@@ -79,83 +68,66 @@ export const AlertsList: React.FC<AlertsListProps> = ({ onSelectState }) => {
         </div>
       </div>
 
-      {/* Alerts Stream */}
-      <div className="flex-1 overflow-y-auto max-h-[440px] pr-1 flex flex-col gap-3 custom-scrollbar">
+      {/* Incident List Stream */}
+      <div className="flex-1 overflow-y-auto max-h-[460px] pr-1 flex flex-col gap-0.5 custom-scrollbar">
         {filteredAlerts.length > 0 ? (
           filteredAlerts.map(alert => {
+            const color = getSeverityColor(alert.severity);
             return (
               <div
                 key={alert.id}
                 onClick={() => handleAlertClick(alert.location)}
-                className={`glass-panel p-5 flex flex-col sm:flex-row gap-5 cursor-pointer transition-all duration-200 hover:bg-white/5 hover:-translate-y-0.5 ${getAlertBorderColor(alert.severity)}`}
+                className="py-3 border-b border-white/5 cursor-pointer hover:bg-white/2 transition-colors duration-150 pl-3 relative"
               >
-                {/* Left Telemetry circular/square graphic */}
-                <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-2xl bg-bgDark border border-white/10 flex items-center justify-center relative overflow-hidden">
-                  <div className={`absolute inset-1.5 rounded-full border border-dashed animate-spin ${
-                    alert.severity === 'Critical' ? 'border-riskCritical/40' :
-                    alert.severity === 'High' ? 'border-riskHigh/40' :
-                    alert.severity === 'Moderate' ? 'border-riskModerate/40' : 'border-tealAccent/40'
-                  }`} style={{ animationDuration: '10s' }} />
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    alert.severity === 'Critical' ? 'bg-riskCritical/20 text-riskVeryHigh' :
-                    alert.severity === 'High' ? 'bg-riskHigh/20 text-riskHigh' :
-                    alert.severity === 'Moderate' ? 'bg-riskModerate/20 text-riskModerate' : 'bg-tealAccent/20 text-tealAccent'
-                  }`}>
-                    <ShieldAlert className="w-4.5 h-4.5" />
-                  </div>
-                </div>
+                {/* Left side color accent border indicator */}
+                <div 
+                  className="absolute left-0 top-3 bottom-3 w-[2.5px] rounded-r" 
+                  style={{ backgroundColor: color }}
+                />
 
-                {/* Right content area */}
-                <div className="flex-1 flex flex-col justify-between gap-2.5">
-                  <div>
-                    {/* Alert Top Bar */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase border ${getSeverityBadge(alert.severity)}`}>
-                          {alert.severity}
-                        </span>
-                        <span className="text-xs font-bold text-textWhite">
-                          {alert.location}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-textMuted font-mono">
-                        {alert.timestamp}
+                <div className="flex flex-col gap-1.5">
+                  
+                  {/* Alert Header Line */}
+                  <div className="flex items-center justify-between text-xs font-semibold">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-textWhite">{alert.location}</span>
+                      <span className="text-[8px] tracking-wider uppercase font-extrabold px-1.5 py-0.5 rounded" style={{ backgroundColor: `${color}12`, color: color, border: `1px solid ${color}25` }}>
+                        {alert.severity}
                       </span>
                     </div>
-
-                    {/* Body Message */}
-                    <p className="text-[11px] text-textMuted leading-relaxed mt-1">
-                      {alert.message}
-                    </p>
-
-                    {/* Recommended Protocol */}
-                    <p className="text-[10px] text-textWhite leading-relaxed mt-1 font-medium bg-white/5 border border-white/5 px-2 py-1 rounded-lg">
-                      <strong className="text-saffronAccent">Protocol: </strong>{alert.action}
-                    </p>
+                    <span className="text-[9px] text-textMuted font-mono">{alert.timestamp}</span>
                   </div>
 
-                  {/* Action footer */}
-                  <div className="flex items-center justify-between text-[10px] text-textMuted mt-1">
-                    <span className="flex items-center gap-1">
-                      Status: <strong className={`font-semibold ${
-                        alert.status === 'Active' ? 'text-riskVeryHigh' :
-                        alert.status === 'Monitoring' ? 'text-saffronAccent' : 'text-riskVeryLow'
-                      }`}>{alert.status}</strong>
+                  {/* Message Reason */}
+                  <p className="text-[11px] text-textMuted leading-relaxed">
+                    {alert.message}
+                  </p>
+
+                  {/* Recommendation Protocol */}
+                  <div className="text-[10px] text-textWhite leading-relaxed font-semibold flex gap-1.5 mt-0.5 items-start">
+                    <span className="text-saffronAccent uppercase text-[9px] tracking-wider shrink-0 mt-0.5">PROTOCOL:</span>
+                    <span>{alert.action}</span>
+                  </div>
+
+                  {/* Metadata line */}
+                  <div className="flex items-center justify-between text-[9px] text-textMuted mt-1">
+                    <span>
+                      Status: <strong className="font-semibold text-textWhite uppercase">{alert.status}</strong>
                     </span>
-                    <button className="px-3.5 py-1 rounded-full text-[10px] font-extrabold bg-textWhite text-bgDark hover:bg-textWhite/90 hover:scale-105 active:scale-95 transition-all duration-150">
-                      View details
-                    </button>
+                    <span className="text-[9px] uppercase tracking-wider text-tealAccent font-bold">
+                      Zoom To Region →
+                    </span>
                   </div>
-                </div>
 
+                </div>
               </div>
             );
           })
         ) : (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Info className="w-8 h-8 text-textMuted opacity-40 mb-2" />
-            <p className="text-sm font-semibold text-textWhite">No warnings logged</p>
-            <p className="text-xs text-textMuted mt-1">No alerts matching active filters were found.</p>
+            <Info className="w-8 h-8 text-textMuted opacity-45 mb-2" />
+            <p className="text-sm font-semibold text-textWhite uppercase tracking-wide">No incident logs found</p>
+            <p className="text-xs text-textMuted mt-0.5">There are no reports matching the active filter.</p>
           </div>
         )}
       </div>

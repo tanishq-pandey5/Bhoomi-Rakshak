@@ -1,21 +1,19 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { 
   AreaChart, 
   Area, 
-  BarChart, 
-  Bar, 
   LineChart, 
   Line, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ReferenceLine, 
   ResponsiveContainer,
-  Cell
+  ReferenceLine
 } from 'recharts';
 import { getRiskColor } from '../../data/mockData';
 import type { StateRiskProfile } from '../../data/mockData';
+import { Info, TrendingUp, TrendingDown, HelpCircle } from 'lucide-react';
 
 interface ChartsGridProps {
   profile: StateRiskProfile;
@@ -24,31 +22,49 @@ interface ChartsGridProps {
 export const ChartsGrid: React.FC<ChartsGridProps> = ({ profile }) => {
   const riskColor = getRiskColor(profile.riskLevel);
 
-  // Chart 1: Rainfall Forecast Data
-  const forecastData = profile.forecastSeries;
+  // Compute a dynamic 72-Hour Risk Outlook timeline based on state risk level & trend
+  const simulatedRiskTimeline = useMemo(() => {
+    const base = profile.riskPercentage;
+    const trend = profile.riskTrend;
+    let p0 = base, p24 = base, p48 = base, p72 = base;
 
-  // Chart 2: Parameter Contributions
-  const contributionsData = [
-    { name: 'Rainfall', value: profile.contributions.rainfall, color: '#16B8A6' },
-    { name: 'Soil Moisture', value: profile.contributions.soilMoisture, color: '#FACC15' },
-    { name: 'Slope Topo', value: profile.contributions.slope, color: '#F97316' },
-    { name: 'Lithology', value: profile.contributions.lithology, color: '#84CC16' },
-    { name: 'Historical Slides', value: profile.contributions.historicalEvents, color: '#EF4444' },
-    { name: 'Vibration Sensors', value: profile.contributions.sensorVibration, color: '#FF9F43' }
-  ].sort((a, b) => b.value - a.value); // Sort descending
+    if (trend === 'Rising') {
+      p0 = Math.max(10, Math.round(base * 0.72));
+      p24 = Math.max(15, Math.round(base * 0.83));
+      p48 = Math.max(20, Math.round(base * 0.91));
+      p72 = base;
+    } else if (trend === 'Falling') {
+      p0 = base;
+      p24 = Math.max(5, Math.round(base * 0.85));
+      p48 = Math.max(5, Math.round(base * 0.70));
+      p72 = Math.max(5, Math.round(base * 0.55));
+    } else {
+      p0 = Math.max(5, base - 3);
+      p24 = base;
+      p48 = Math.max(5, base + 2);
+      p72 = Math.max(5, base - 1);
+    }
 
-  // Chart 3: 7-Day Trend
-  const trendData = profile.trendSeries;
+    return [
+      { name: 'NOW', risk: p0 },
+      { name: '24H', risk: p24 },
+      { name: '48H', risk: p48 },
+      { name: '72H', risk: p72 }
+    ];
+  }, [profile.riskPercentage, profile.riskTrend]);
+
+  // Forecast data for rainfall
+  const rainfallData = profile.forecastSeries;
 
   // Custom Recharts Tooltip
   const CustomTooltip = ({ active, payload, label, suffix = '' }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="glass-panel px-3 py-2 border-white/20 text-xs shadow-xl flex flex-col gap-0.5">
-          <p className="font-semibold text-textWhite">{label}</p>
-          <p className="text-tealAccent font-bold font-mono">
+        <div className="bg-[#0B2030] border border-white/10 px-3 py-1.5 rounded text-[11px] shadow-2xl flex flex-col gap-0.5">
+          <p className="font-bold text-textWhite font-mono">{label}</p>
+          <p className="text-tealAccent font-black font-mono">
             {payload[0].value}
-            <span className="text-[10px] text-textMuted font-normal ml-0.5">{suffix}</span>
+            <span className="text-[9px] text-textMuted font-medium font-sans ml-0.5">{suffix}</span>
           </p>
         </div>
       );
@@ -57,111 +73,116 @@ export const ChartsGrid: React.FC<ChartsGridProps> = ({ profile }) => {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div className="flex flex-col gap-8 w-full py-2">
       
-      {/* Chart 1: Rainfall Forecast */}
-      <div className="glass-panel p-5 flex flex-col h-[340px]">
-        <div className="mb-4">
-          <h4 className="text-sm font-semibold tracking-wide text-textWhite">72-Hour Cumulative Rainfall Forecast</h4>
-          <p className="text-[11px] text-textMuted">Forecasted water deposition over predictive horizon</p>
-        </div>
+      {/* Primary Section: 72H Risk Outlook Chart */}
+      <div className="flex flex-col gap-4">
         
-        <div className="flex-1 w-full text-xs">
+        {/* Chart Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/5 pb-3">
+          <div>
+            <span className="text-[9px] tracking-widest text-tealAccent font-bold uppercase block mb-1">
+              Hazard Trend Prediction
+            </span>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-extrabold text-textWhite uppercase tracking-wide">
+                72-Hour Risk Outlook
+              </h3>
+              <span className="text-[9px] font-mono text-textMuted uppercase font-bold tracking-widest bg-white/5 px-2 py-0.5 rounded">
+                SIMULATED RISK DATA
+              </span>
+            </div>
+          </div>
+
+          {/* Trend status flag */}
+          <div className="flex items-center gap-2 text-xs font-bold">
+            <span className="text-textMuted">Outlook Trend:</span>
+            {profile.riskTrend === 'Rising' ? (
+              <span className="text-riskCritical flex items-center gap-1">
+                <TrendingUp className="w-3.5 h-3.5 animate-bounce" /> INCREASING
+              </span>
+            ) : profile.riskTrend === 'Falling' ? (
+              <span className="text-riskVeryLow flex items-center gap-1">
+                <TrendingDown className="w-3.5 h-3.5" /> DECREASING
+              </span>
+            ) : (
+              <span className="text-textMuted uppercase">STABLE</span>
+            )}
+          </div>
+        </div>
+
+        {/* Chart Graphic Area */}
+        <div className="w-full h-56 text-[10px] relative">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={forecastData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <AreaChart data={simulatedRiskTimeline} margin={{ top: 15, right: 10, left: -25, bottom: 5 }}>
               <defs>
-                <linearGradient id="rainGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#16B8A6" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#16B8A6" stopOpacity={0.0} />
+                <linearGradient id="riskGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={riskColor} stopOpacity={0.25} />
+                  <stop offset="95%" stopColor={riskColor} stopOpacity={0.0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="time" stroke="#9FB3C8" tickLine={false} />
-              <YAxis stroke="#9FB3C8" tickLine={false} />
-              <Tooltip content={<CustomTooltip suffix=" mm" />} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
+              <XAxis dataKey="name" stroke="#8FA6B8" tickLine={false} />
+              <YAxis stroke="#8FA6B8" tickLine={false} domain={[0, 100]} />
+              <Tooltip content={<CustomTooltip suffix="%" />} />
               
-              {/* Rainfall warning threshold line at 50mm */}
               <ReferenceLine 
-                y={80} 
-                stroke="#EF4444" 
+                y={75} 
+                stroke="var(--risk-red)" 
                 strokeDasharray="4 4" 
-                label={{ value: 'Warning Thr. (80mm)', position: 'insideTopRight', fill: '#EF4444', fontSize: 9, fontWeight: 'bold' }} 
+                opacity={0.5}
+                label={{ value: 'HIGH RISK THRESHOLD (75%)', fill: 'var(--risk-red)', fontSize: 7, fontWeight: 'bold', position: 'insideTopLeft' }} 
               />
               
               <Area 
                 type="monotone" 
-                dataKey="rainfall" 
-                stroke="#16B8A6" 
-                strokeWidth={2}
+                dataKey="risk" 
+                stroke={riskColor} 
+                strokeWidth={2.5}
                 fillOpacity={1} 
-                fill="url(#rainGradient)" 
+                fill="url(#riskGrad)" 
               />
             </AreaChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Chart 2: Contribution Bar Chart */}
-      <div className="glass-panel p-5 flex flex-col h-[340px]">
-        <div className="mb-4">
-          <h4 className="text-sm font-semibold tracking-wide text-textWhite">Risk Parameter Contribution</h4>
-          <p className="text-[11px] text-textMuted">Weight breakdown of hazard trigger factors (%)</p>
+      {/* Secondary Chart: Rainfall Accumulation Forecast */}
+      <div className="flex flex-col gap-4 border-t border-white/5 pt-6">
+        <div>
+          <span className="text-[9px] tracking-widest text-tealAccent font-bold uppercase block mb-1">
+            Hydrological Input
+          </span>
+          <h3 className="text-base font-extrabold text-textWhite uppercase tracking-wide">
+            72-Hour Cumulative Rainfall Forecast
+          </h3>
+          <p className="text-[10px] text-textMuted mt-0.5">
+            Forecasted cumulative water deposition in millimeters over predictive horizon
+          </p>
         </div>
 
-        <div className="flex-1 w-full text-xs">
+        <div className="w-full h-48 text-[10px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart 
-              data={contributionsData} 
-              layout="vertical"
-              margin={{ top: 5, right: 15, left: 15, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" horizontal={false} />
-              <XAxis type="number" stroke="#9FB3C8" tickLine={false} />
-              <YAxis 
-                type="category" 
-                dataKey="name" 
-                stroke="#9FB3C8" 
-                tickLine={false}
-                width={85}
-              />
-              <Tooltip content={<CustomTooltip suffix="%" />} />
-              <Bar 
-                dataKey="value" 
-                radius={[0, 4, 4, 0]}
-                barSize={12}
-              >
-                {contributionsData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Chart 3: Recent Risk Trend */}
-      <div className="glass-panel p-5 flex flex-col h-[340px] lg:col-span-2 xl:col-span-1">
-        <div className="mb-4">
-          <h4 className="text-sm font-semibold tracking-wide text-textWhite">Recent Risk Index Trend</h4>
-          <p className="text-[11px] text-textMuted">Composite landslide threat levels for previous 7 days</p>
-        </div>
-
-        <div className="flex-1 w-full text-xs">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="day" stroke="#9FB3C8" tickLine={false} />
-              <YAxis stroke="#9FB3C8" tickLine={false} domain={[0, 100]} />
-              <Tooltip content={<CustomTooltip suffix="%" />} />
-              <Line 
+            <AreaChart data={rainfallData} margin={{ top: 10, right: 10, left: -25, bottom: 5 }}>
+              <defs>
+                <linearGradient id="rainGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#16B8A6" stopOpacity={0.20} />
+                  <stop offset="95%" stopColor="#16B8A6" stopOpacity={0.0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
+              <XAxis dataKey="time" stroke="#8FA6B8" tickLine={false} />
+              <YAxis stroke="#8FA6B8" tickLine={false} />
+              <Tooltip content={<CustomTooltip suffix=" mm" />} />
+              <Area 
                 type="monotone" 
-                dataKey="risk" 
-                stroke={riskColor} 
-                strokeWidth={3}
-                dot={{ r: 4, strokeWidth: 1, fill: '#071A2B' }}
-                activeDot={{ r: 6, strokeWidth: 2, fill: riskColor }}
+                dataKey="rainfall" 
+                stroke="#16B8A6" 
+                strokeWidth={2}
+                fillOpacity={1} 
+                fill="url(#rainGrad)" 
               />
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       </div>

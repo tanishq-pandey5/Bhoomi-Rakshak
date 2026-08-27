@@ -19,7 +19,7 @@ export const StateSelector: React.FC<StateSelectorProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  const neStates = ["Meghalaya", "Sikkim", "Assam", "Arunachal Pradesh", "Nagaland", "Manipur", "Mizoram", "Tripura"];
+  const neStates = ["Assam", "Arunachal Pradesh", "Meghalaya", "Manipur", "Mizoram", "Nagaland", "Tripura", "Sikkim"];
 
   // Filter states based on search query
   const filteredStates = allStatesList.filter(state =>
@@ -44,116 +44,132 @@ export const StateSelector: React.FC<StateSelectorProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        
-        {/* State Dropdown Search */}
-        <div ref={dropdownRef} className="relative w-full md:w-72">
-          <label className="block text-[10px] text-textMuted uppercase font-bold tracking-wider mb-1">
-            Select Monitored State
-          </label>
-          
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="w-full h-10 px-4 flex items-center justify-between rounded-xl bg-panelBg border border-white/12 hover:border-tealAccent/30 text-sm font-semibold text-textWhite transition-all duration-200"
-          >
-            <span>{selectedState || 'Search and select...'}</span>
-            <ChevronDown className={`w-4 h-4 text-textMuted transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-          </button>
-
-          {isOpen && (
-            <div className="absolute left-0 right-0 mt-2 z-40 glass-panel border-white/20 p-2 shadow-2xl max-h-64 flex flex-col">
-              <div className="relative mb-2 shrink-0">
-                <Search className="absolute left-3 top-2.5 w-4 h-4 text-textMuted" />
-                <input
-                  type="text"
-                  placeholder="Type state name..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-9 pl-9 pr-4 rounded-lg bg-bgDark border border-white/10 text-xs text-textWhite placeholder:text-textMuted focus:outline-none focus:border-tealAccent transition-colors"
-                />
-              </div>
-
-              <div className="overflow-y-auto flex-1 custom-scrollbar">
-                {filteredStates.length > 0 ? (
-                  filteredStates.map((state) => {
-                    const isSelected = selectedState === state;
-                    return (
-                      <button
-                        key={state}
-                        onClick={() => handleSelectState(state)}
-                        className={`w-full px-3 py-2 flex items-center justify-between text-left text-xs rounded-lg transition-colors duration-150 ${
-                          isSelected 
-                            ? 'bg-tealAccent/15 text-tealAccent font-semibold' 
-                            : 'text-textMuted hover:bg-white/5 hover:text-textWhite'
-                        }`}
-                      >
-                        <span>{state}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-tealAccent" />}
-                      </button>
-                    );
-                  })
-                ) : (
-                  <div className="text-center text-xs py-4 text-textMuted">No states found</div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Region Filter Tabs */}
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-          <span className="block text-[10px] text-textMuted uppercase font-bold tracking-wider w-full md:w-auto md:mr-1">
-            Region Filter
-          </span>
-          {[
-            { label: 'All India', value: 'All India' },
-            { label: 'North-East', value: 'North-East India' },
-            { label: 'Himalayan', value: 'Himalayan Region' },
-            { label: 'Others', value: 'Other Regions' }
-          ].map(region => {
-            const isAct = regionFilter === region.value;
-            return (
-              <button
-                key={region.value}
-                onClick={() => onSelectRegion(region.value)}
-                className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg border transition-all duration-200 ${
-                  isAct 
-                    ? 'bg-tealAccent text-bgDark border-tealAccent shadow-lg shadow-tealAccent/10' 
-                    : 'bg-panelBg border-white/10 text-textMuted hover:text-textWhite hover:border-white/20'
-                }`}
-              >
-                {region.label}
-              </button>
-            );
-          })}
-        </div>
-
+    <div className="flex flex-col gap-5 w-full py-1">
+      {/* Title */}
+      <div>
+        <span className="text-[9px] tracking-widest text-tealAccent font-bold uppercase block mb-1">
+          OPERATIONAL BOUNDARIES
+        </span>
+        <h3 className="text-base font-extrabold text-textWhite uppercase tracking-wide">
+          Region Control
+        </h3>
       </div>
 
-      {/* NE Quick Select buttons */}
-      <div className="p-4 glass-panel border-white/8 bg-panelBg/40">
-        <span className="block text-[10px] text-textMuted uppercase font-semibold tracking-wider mb-2.5">
-          North-Eastern Region Quick Selection
-        </span>
-        <div className="flex flex-wrap gap-2">
-          {neStates.map(state => {
-            const isSel = selectedState === state;
-            return (
-              <button
-                key={state}
-                onClick={() => onSelectState(state)}
-                className={`px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all duration-200 ${
-                  isSel 
-                    ? 'bg-gradient-to-r from-saffronAccent to-saffronAccent/80 text-bgDark font-bold shadow-lg shadow-saffronAccent/10 border-transparent scale-105' 
-                    : 'bg-white/5 border border-white/8 text-textMuted hover:bg-white/10 hover:text-textWhite hover:border-white/15'
-                }`}
-              >
-                {state}
-              </button>
-            );
-          })}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
+        
+        {/* Left column: Selected State dropdown & Area Context */}
+        <div className="flex flex-col gap-4">
+          
+          {/* Dropdown Selector */}
+          <div ref={dropdownRef} className="relative w-full">
+            <span className="block text-[9px] text-textMuted uppercase font-bold tracking-wider mb-1.5">
+              Region / State
+            </span>
+            
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="w-full h-9 px-3 flex items-center justify-between rounded bg-[#0B2030] border border-white/8 hover:border-tealAccent/30 text-xs font-bold text-textWhite transition-colors duration-200"
+            >
+              <span>{selectedState || 'Select region...'}</span>
+              <ChevronDown className={`w-3.5 h-3.5 text-textMuted transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isOpen && (
+              <div className="absolute left-0 right-0 mt-1.5 z-40 bg-[#0B2030] border border-white/10 rounded p-2 shadow-2xl max-h-56 flex flex-col">
+                <div className="relative mb-2 shrink-0">
+                  <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-textMuted" />
+                  <input
+                    type="text"
+                    placeholder="Search state..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full h-8 pl-8 pr-3 rounded bg-[#061521] border border-white/8 text-xs text-textWhite placeholder:text-textMuted focus:outline-none focus:border-tealAccent transition-colors"
+                  />
+                </div>
+
+                <div className="overflow-y-auto flex-1 custom-scrollbar">
+                  {filteredStates.length > 0 ? (
+                    filteredStates.map((state) => {
+                      const isSelected = selectedState === state;
+                      return (
+                        <button
+                          key={state}
+                          onClick={() => handleSelectState(state)}
+                          className={`w-full px-2.5 py-1.5 flex items-center justify-between text-left text-xs rounded transition-colors duration-150 ${
+                            isSelected 
+                              ? 'bg-tealAccent/10 text-tealAccent font-bold' 
+                              : 'text-textMuted hover:bg-white/5 hover:text-textWhite'
+                          }`}
+                        >
+                          <span>{state}</span>
+                          {isSelected && <Check className="w-3 h-3 text-tealAccent" />}
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center text-xs py-3 text-textMuted">No regions found</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Area Filter Tabs */}
+          <div>
+            <span className="block text-[9px] text-textMuted uppercase font-bold tracking-wider mb-1.5">
+              Area Context
+            </span>
+            <div className="flex flex-wrap gap-1">
+              {[
+                { label: 'All India', value: 'All India' },
+                { label: 'North-East', value: 'North-East India' },
+                { label: 'Himalayan', value: 'Himalayan Region' }
+              ].map(region => {
+                const isAct = regionFilter === region.value;
+                return (
+                  <button
+                    key={region.value}
+                    onClick={() => onSelectRegion(region.value)}
+                    className={`px-3 py-1.5 text-[9px] uppercase tracking-wider font-bold rounded transition-colors ${
+                      isAct 
+                        ? 'bg-tealAccent text-bgDark font-black' 
+                        : 'bg-[#0B2030] text-textMuted hover:text-textWhite'
+                    }`}
+                  >
+                    {region.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
         </div>
+
+        {/* Right column: NE Quick select grid */}
+        <div>
+          <span className="block text-[9px] text-textMuted uppercase font-bold tracking-wider mb-1.5">
+            Quick Select (North-East)
+          </span>
+          <div className="grid grid-cols-2 gap-1.5">
+            {neStates.map(state => {
+              const isSel = selectedState === state;
+              return (
+                <button
+                  key={state}
+                  onClick={() => onSelectState(state)}
+                  className={`px-2 py-1.5 text-[9px] font-bold rounded text-left transition-colors ${
+                    isSel 
+                      ? 'bg-tealAccent/15 border border-tealAccent/25 text-tealAccent' 
+                      : 'bg-white/5 text-textMuted hover:bg-white/8 hover:text-textWhite'
+                  }`}
+                >
+                  {state}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
       </div>
     </div>
   );

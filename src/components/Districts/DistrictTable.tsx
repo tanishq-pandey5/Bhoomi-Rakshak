@@ -72,49 +72,53 @@ export const DistrictTable: React.FC<DistrictTableProps> = ({ onSelectState, sel
 
   const getAlertBadgeStyles = (status: DistrictRow['alertStatus']) => {
     switch (status) {
-      case 'Active': return 'bg-riskCritical/10 text-riskVeryHigh border-riskCritical/20';
-      case 'Monitoring': return 'bg-saffronAccent/10 text-saffronAccent border-saffronAccent/20';
-      default: return 'bg-riskVeryLow/10 text-riskVeryLow border-riskVeryLow/20';
+      case 'Active': return 'text-riskCritical bg-riskCritical/10 border-riskCritical/20';
+      case 'Monitoring': return 'text-saffronAccent bg-saffronAccent/10 border-saffronAccent/20';
+      default: return 'text-riskVeryLow bg-riskVeryLow/10 border-riskVeryLow/20';
     }
   };
 
   return (
-    <div className="glass-panel p-5 flex flex-col h-full gap-4">
+    <div className="flex flex-col h-full gap-5">
       
       {/* Header and Search */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/8 pb-4">
         <div>
-          <h3 className="text-lg font-semibold tracking-wide text-textWhite">Most Vulnerable Districts</h3>
-          <p className="text-xs text-textMuted mt-0.5 font-sans">National ranking based on current telemetry inputs</p>
+          <span className="text-[9px] tracking-widest text-tealAccent font-bold uppercase block mb-1">
+            Vulnerability Rank
+          </span>
+          <h3 className="text-base font-extrabold text-textWhite uppercase tracking-wide">
+            Regional Threat Roster
+          </h3>
         </div>
 
         {/* Search Input */}
-        <div className="relative w-full sm:w-60">
-          <Search className="absolute left-3 top-2.5 w-4 h-4 text-textMuted" />
+        <div className="relative w-full sm:w-56 shrink-0">
+          <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-textMuted" />
           <input
             type="text"
-            placeholder="Search district/state..."
+            placeholder="Search district..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-9 pl-9 pr-4 rounded-xl bg-bgDark border border-white/10 text-xs text-textWhite placeholder:text-textMuted focus:outline-none focus:border-tealAccent transition-colors"
+            className="w-full h-8 pl-8 pr-3 rounded bg-[#0B2030] border border-white/8 text-xs text-textWhite placeholder:text-textMuted focus:outline-none focus:border-tealAccent transition-colors"
           />
         </div>
       </div>
 
-      {/* Responsive Displays */}
-      <div className="flex-1 overflow-x-auto min-h-[300px] max-h-[480px] custom-scrollbar pr-1">
+      {/* Table grid */}
+      <div className="flex-1 overflow-x-auto min-h-[300px] max-h-[460px] custom-scrollbar pr-1">
         
         {/* DESKTOP TABLE VIEW */}
         <table className="hidden md:table w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="border-b border-white/10 text-textMuted uppercase font-bold tracking-wider">
-              <th className="py-3 px-2 w-12 text-center">Rank</th>
-              <th className="py-3 px-3">District</th>
-              <th className="py-3 px-3">State</th>
-              <th className="py-3 px-3 text-center">Risk Score</th>
-              <th className="py-3 px-3">Grade</th>
-              <th className="py-3 px-3">Primary Trigger</th>
-              <th className="py-3 px-3 text-center">Alert</th>
+            <tr className="border-b border-white/8 text-textMuted uppercase font-bold tracking-wider">
+              <th className="py-2.5 px-2 w-12 text-center text-[9px]">Rank</th>
+              <th className="py-2.5 px-3 text-[9px]">District</th>
+              <th className="py-2.5 px-3 text-[9px]">State</th>
+              <th className="py-2.5 px-3 text-center text-[9px]">Risk Score</th>
+              <th className="py-2.5 px-3 text-[9px]">Hazard Grade</th>
+              <th className="py-2.5 px-3 text-[9px]">Primary Trigger</th>
+              <th className="py-2.5 px-3 text-center text-[9px]">Alert</th>
             </tr>
           </thead>
           <tbody>
@@ -127,7 +131,7 @@ export const DistrictTable: React.FC<DistrictTableProps> = ({ onSelectState, sel
                   <tr
                     key={`${row.stateName}-${row.districtName}`}
                     onClick={() => handleRowClick(row.stateName)}
-                    className={`border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors duration-150 ${
+                    className={`border-b border-white/5 hover:bg-white/2 cursor-pointer transition-colors duration-150 ${
                       isSelected ? 'bg-tealAccent/5 font-medium' : ''
                     }`}
                   >
@@ -143,7 +147,7 @@ export const DistrictTable: React.FC<DistrictTableProps> = ({ onSelectState, sel
                     </td>
                     <td className="py-3 px-3 text-textMuted">{row.mainDriver}</td>
                     <td className="py-3 px-3 text-center">
-                      <span className={`px-2 py-0.5 rounded border text-[9px] font-bold uppercase ${getAlertBadgeStyles(row.alertStatus)}`}>
+                      <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold uppercase border border-white/5 ${getAlertBadgeStyles(row.alertStatus)}`}>
                         {row.alertStatus}
                       </span>
                     </td>
@@ -158,8 +162,8 @@ export const DistrictTable: React.FC<DistrictTableProps> = ({ onSelectState, sel
           </tbody>
         </table>
 
-        {/* MOBILE STACKED CARDS VIEW */}
-        <div className="md:hidden flex flex-col gap-3">
+        {/* MOBILE VIEW */}
+        <div className="md:hidden flex flex-col gap-2.5">
           {filteredRows.length > 0 ? (
             filteredRows.map(row => {
               const isSelected = selectedState === row.stateName;
@@ -169,47 +173,38 @@ export const DistrictTable: React.FC<DistrictTableProps> = ({ onSelectState, sel
                 <div
                   key={`${row.stateName}-${row.districtName}-mob`}
                   onClick={() => handleRowClick(row.stateName)}
-                  className={`p-4 rounded-2xl border flex flex-row gap-4 items-center transition-all duration-200 cursor-pointer ${
+                  className={`p-3.5 rounded border transition-all duration-200 cursor-pointer ${
                     isSelected 
                       ? 'bg-tealAccent/5 border-tealAccent/30' 
-                      : 'bg-white/5 border-white/8 hover:bg-white/8'
+                      : 'bg-white/3 border-white/5 hover:bg-white/5'
                   }`}
                 >
-                  {/* Left: Square Index / telemetry badge */}
-                  <div className="w-16 h-16 shrink-0 rounded-xl bg-bgDark border border-white/10 flex flex-col items-center justify-center relative overflow-hidden">
-                    <span className="text-[10px] text-textMuted uppercase font-semibold">Rank</span>
-                    <span className="text-base font-black text-textWhite font-mono mt-0.5">#{row.rank}</span>
+                  <div className="flex justify-between items-center gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-textMuted font-mono">#{row.rank}</span>
+                      <h4 className="text-xs font-bold text-textWhite">{row.districtName}</h4>
+                    </div>
+                    <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${getAlertBadgeStyles(row.alertStatus)}`}>
+                      {row.alertStatus}
+                    </span>
                   </div>
 
-                  {/* Right: Details block */}
-                  <div className="flex-1 flex flex-col gap-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <h4 className="text-xs font-black text-textWhite">{row.districtName}</h4>
-                      <span className={`px-1.5 py-0.5 rounded border text-[8px] font-bold uppercase ${getAlertBadgeStyles(row.alertStatus)}`}>
-                        {row.alertStatus}
-                      </span>
-                    </div>
+                  <div className="flex justify-between items-baseline text-[10px] text-textMuted mt-1">
+                    <span>{row.stateName}</span>
+                    <span className="font-bold font-mono" style={{ color: riskColor }}>
+                      {row.riskScore}% Risk
+                    </span>
+                  </div>
 
-                    <div className="flex justify-between items-baseline text-[10px] text-textMuted mt-0.5">
-                      <span>{row.stateName}</span>
-                      <span className="font-bold font-mono" style={{ color: riskColor }}>
-                        {row.riskScore}% Risk
-                      </span>
-                    </div>
-
-                    {/* Pill Action Button */}
-                    <div className="flex justify-between items-center mt-1 pt-1 border-t border-white/5">
-                      <span className="text-[9px] text-textMuted block">Trigger: {row.mainDriver}</span>
-                      <button className="px-3 py-0.5 rounded-full text-[9px] font-extrabold bg-textWhite text-bgDark hover:bg-textWhite/95 transition-colors">
-                        Select
-                      </button>
-                    </div>
+                  <div className="flex justify-between items-center mt-2 pt-2 border-t border-white/5 text-[9px] text-textMuted">
+                    <span>Trigger: {row.mainDriver}</span>
+                    <span className="text-tealAccent font-bold">Select State →</span>
                   </div>
                 </div>
               );
             })
           ) : (
-            <div className="text-center py-12 text-textMuted text-xs">No districts found</div>
+            <div className="text-center py-12 text-textMuted text-xs font-semibold">No districts found</div>
           )}
         </div>
 
