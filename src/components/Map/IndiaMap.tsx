@@ -125,7 +125,7 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
   // Configure Globe Projection
   const globeProjection = d3.geoOrthographic()
     .clipAngle(90)
-    .scale(260) // Slightly larger globe as in screenshot
+    .scale(260) 
     .translate([460, 420])
     .rotate([rotation, -20]);
 
@@ -188,6 +188,23 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
     } else {
       setZoomState('globe');
     }
+  };
+
+  // Extract profiles and attributes for selected focus state
+  const selectedStateProfile = selectedState ? getFullStateProfile(selectedState) : null;
+  const selectedRiskColor = selectedStateProfile ? getRiskColor(selectedStateProfile.riskLevel) : '';
+
+  const getPrimaryDrivers = (profile: any) => {
+    const contr = profile.contributions;
+    const sorted = Object.entries(contr).sort((a, b) => (b[1] as number) - (a[1] as number));
+    return sorted.slice(0, 3).map(([key]) => {
+      if (key === 'rainfall') return 'Heavy rainfall';
+      if (key === 'soilMoisture') return 'High soil moisture';
+      if (key === 'slope') return 'Steep terrain';
+      if (key === 'sensorVibration') return 'Slope vibrations';
+      if (key === 'historicalEvents') return 'Historical landslide activity';
+      return 'Lithological instability';
+    });
   };
 
   return (
@@ -289,6 +306,65 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
         </div>
       )}
 
+      {/* 3. SELECTED STATE CONTEXTUAL RISK INFORMATION OVERLAY (Top-Right) */}
+      {selectedStateProfile && zoomState !== 'globe' && (
+        <div 
+          className="absolute top-6 right-6 z-20 glass-panel p-4 flex flex-col gap-3 w-60 pointer-events-auto border-t-2"
+          style={{ borderTopColor: selectedRiskColor }}
+        >
+          <div className="flex items-center justify-between border-b border-white/5 pb-1.5">
+            <span className="text-[9px] text-textMuted uppercase font-bold tracking-widest block">
+              Active Focus Profile
+            </span>
+            <button 
+              onClick={() => onSelectState('')} 
+              className="text-[9px] text-textMuted hover:text-textWhite font-semibold uppercase tracking-wider"
+            >
+              Deselect
+            </button>
+          </div>
+          
+          <div>
+            <h3 className="text-sm font-extrabold text-textWhite uppercase tracking-wide">
+              {selectedStateProfile.name}
+            </h3>
+            <div className="flex items-baseline gap-1.5 mt-1.5">
+              <span className="text-3xl font-bold font-mono" style={{ color: selectedRiskColor }}>
+                {selectedStateProfile.riskPercentage}%
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: selectedRiskColor }}>
+                {selectedStateProfile.riskLevel} Risk
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[9px] text-textMuted uppercase font-bold tracking-wider">
+              Primary Drivers:
+            </span>
+            <div className="flex flex-col gap-1.5 pl-1">
+              {getPrimaryDrivers(selectedStateProfile).map((drv, idx) => (
+                <div key={idx} className="text-[10px] text-textWhite flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: selectedRiskColor }} />
+                  <span>{drv}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-t border-white/5 pt-2 flex justify-between items-center text-[9px] text-textMuted font-mono">
+            <span>72-Hour Outlook:</span>
+            <span className={`font-bold ${
+              selectedStateProfile.riskTrend === 'Rising' ? 'text-riskVeryHigh' :
+              selectedStateProfile.riskTrend === 'Falling' ? 'text-riskVeryLow' : 'text-riskModerate'
+            }`}>
+              {selectedStateProfile.riskTrend === 'Rising' ? 'INCREASING' :
+               selectedStateProfile.riskTrend === 'Falling' ? 'DECREASING' : 'STABLE'}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Main SVG Render Window */}
       <div className="relative flex-1 flex items-center justify-center">
         
@@ -369,7 +445,7 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
           <div className="absolute bottom-10 flex flex-col items-center gap-1.5 z-20">
             <button
               onClick={() => setZoomState('india')}
-              className="px-6 py-2.5 rounded-full bg-gradient-to-r from-tealAccent to-tealAccent/80 hover:from-tealAccent hover:to-tealAccent text-bgDark font-bold text-xs tracking-wider shadow-lg hover:shadow-tealAccent/25 hover:scale-105 transition-all duration-200"
+              className="px-6 py-2.5 rounded-lg bg-tealAccent hover:bg-tealAccent/90 text-bgDark font-bold text-xs tracking-wider transition-all duration-200"
             >
               EXPLORE RISK MAP
             </button>
@@ -415,11 +491,9 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
                         key={idx}
                         d={p.path}
                         fill={riskColor}
-                        stroke={isSelected ? '#16B8A6' : 'rgba(7, 26, 43, 0.75)'}
-                        strokeWidth={isSelected ? 2.5 : 0.8}
-                        className={`transition-all duration-250 group-hover:brightness-110 ${
-                          isSelected ? 'filter drop-shadow-[0_0_8px_rgba(22,184,166,0.5)]' : ''
-                        }`}
+                        stroke={isSelected ? '#F5F7FA' : 'rgba(5, 19, 33, 0.7)'}
+                        strokeWidth={isSelected ? 2.2 : 0.6}
+                        className="transition-all duration-200 group-hover:brightness-105"
                       />
                     ))}
                   </g>
@@ -441,7 +515,7 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
           const profile = getFullStateProfile(hoveredState.name);
           return (
             <div 
-              className="absolute pointer-events-none z-30 glass-panel px-3 py-2 text-xs flex flex-col gap-1 border-white/20 shadow-xl"
+              className="absolute pointer-events-none z-30 glass-panel px-3 py-2 text-xs flex flex-col gap-1"
               style={{ 
                 left: `${hoverPos.x + 15}px`, 
                 top: `${hoverPos.y - 45}px`,
@@ -451,7 +525,7 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
               <div className="font-semibold text-textWhite flex items-center gap-1.5">
                 <span>{hoveredState.name}</span>
                 {isNEState(hoveredState.name) && (
-                  <span className="bg-saffronAccent/20 text-saffronAccent text-[9px] px-1.5 rounded-full font-bold">NE</span>
+                  <span className="bg-saffronAccent/20 text-saffronAccent text-[9px] px-1.5 rounded font-bold">NE</span>
                 )}
               </div>
               <div className="flex items-center gap-2 mt-0.5">
