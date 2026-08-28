@@ -19,10 +19,10 @@ export const AlertsList: React.FC<AlertsListProps> = ({ onSelectState }) => {
   // Get alert border color
   const getAlertBorderColor = (severity: SystemAlert['severity']) => {
     switch (severity) {
-      case 'Critical': return 'border-l-4 border-l-riskCritical border-white/8';
-      case 'High': return 'border-l-4 border-l-riskHigh border-white/8';
-      case 'Moderate': return 'border-l-4 border-l-riskModerate border-white/8';
-      default: return 'border-l-4 border-l-tealAccent border-white/8';
+      case 'Critical': return 'border-l-riskCritical';
+      case 'High': return 'border-l-riskHigh';
+      case 'Moderate': return 'border-l-riskModerate';
+      default: return 'border-l-tealAccent';
     }
   };
 
@@ -47,10 +47,10 @@ export const AlertsList: React.FC<AlertsListProps> = ({ onSelectState }) => {
     <div className="glass-panel p-5 flex flex-col h-full gap-4">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/8 pb-4">
         <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-xl bg-riskVeryHigh/15 border border-riskVeryHigh/20 text-riskVeryHigh animate-pulse">
-            <Bell className="w-5 h-5" />
+          <div className="p-2 rounded-lg bg-riskVeryHigh/15 border border-riskVeryHigh/20 text-riskVeryHigh animate-pulse">
+            <Bell className="w-4 h-4" />
           </div>
           <div>
             <h3 className="text-lg font-semibold tracking-wide text-textWhite">Live Threat & Warning Broadcast</h3>
@@ -66,7 +66,7 @@ export const AlertsList: React.FC<AlertsListProps> = ({ onSelectState }) => {
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
-                className={`px-3 py-1 text-xs font-semibold rounded-lg border transition-all duration-200 ${
+                className={`px-3 py-1 text-xs font-semibold rounded border transition-all duration-200 ${
                   isAct 
                     ? 'bg-tealAccent/15 border-tealAccent text-tealAccent' 
                     : 'bg-white/5 border-white/8 text-textMuted hover:text-textWhite'
@@ -87,26 +87,26 @@ export const AlertsList: React.FC<AlertsListProps> = ({ onSelectState }) => {
               <div
                 key={alert.id}
                 onClick={() => handleAlertClick(alert.location)}
-                className={`glass-panel p-5 flex flex-col sm:flex-row gap-5 cursor-pointer transition-all duration-200 hover:bg-white/5 hover:-translate-y-0.5 ${getAlertBorderColor(alert.severity)}`}
+                className={`glass-panel p-4 flex flex-col sm:flex-row gap-4 cursor-pointer border-l-4 transition-all duration-200 hover:bg-white/5 ${getAlertBorderColor(alert.severity)}`}
               >
                 {/* Left Telemetry circular/square graphic */}
-                <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-2xl bg-bgDark border border-white/10 flex items-center justify-center relative overflow-hidden">
-                  <div className={`absolute inset-1.5 rounded-full border border-dashed animate-spin ${
+                <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-lg bg-bgDark border border-white/8 flex items-center justify-center relative overflow-hidden">
+                  <div className={`absolute inset-1 rounded-full border border-dashed animate-spin ${
                     alert.severity === 'Critical' ? 'border-riskCritical/40' :
                     alert.severity === 'High' ? 'border-riskHigh/40' :
                     alert.severity === 'Moderate' ? 'border-riskModerate/40' : 'border-tealAccent/40'
-                  }`} style={{ animationDuration: '10s' }} />
+                  }`} style={{ animationDuration: '12s' }} />
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                     alert.severity === 'Critical' ? 'bg-riskCritical/20 text-riskVeryHigh' :
                     alert.severity === 'High' ? 'bg-riskHigh/20 text-riskHigh' :
                     alert.severity === 'Moderate' ? 'bg-riskModerate/20 text-riskModerate' : 'bg-tealAccent/20 text-tealAccent'
                   }`}>
-                    <ShieldAlert className="w-4.5 h-4.5" />
+                    <ShieldAlert className="w-4 h-4" />
                   </div>
                 </div>
 
                 {/* Right content area */}
-                <div className="flex-1 flex flex-col justify-between gap-2.5">
+                <div className="flex-1 flex flex-col justify-between gap-2">
                   <div>
                     {/* Alert Top Bar */}
                     <div className="flex items-center justify-between">
@@ -129,7 +129,7 @@ export const AlertsList: React.FC<AlertsListProps> = ({ onSelectState }) => {
                     </p>
 
                     {/* Recommended Protocol */}
-                    <p className="text-[10px] text-textWhite leading-relaxed mt-1 font-medium bg-white/5 border border-white/5 px-2 py-1 rounded-lg">
+                    <p className="text-[10px] text-textWhite leading-relaxed mt-1 font-medium bg-white/5 border border-white/8 px-2 py-1 rounded">
                       <strong className="text-saffronAccent">Protocol: </strong>{alert.action}
                     </p>
                   </div>
@@ -142,7 +142,7 @@ export const AlertsList: React.FC<AlertsListProps> = ({ onSelectState }) => {
                         alert.status === 'Monitoring' ? 'text-saffronAccent' : 'text-riskVeryLow'
                       }`}>{alert.status}</strong>
                     </span>
-                    <button className="px-3.5 py-1 rounded-full text-[10px] font-extrabold bg-textWhite text-bgDark hover:bg-textWhite/90 hover:scale-105 active:scale-95 transition-all duration-150">
+                    <button className="px-3 py-1 rounded text-[10px] font-bold bg-textWhite text-bgDark hover:bg-textWhite/90 transition-all duration-150">
                       View details
                     </button>
                   </div>

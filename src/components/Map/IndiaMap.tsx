@@ -191,14 +191,14 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
   };
 
   return (
-    <div className="relative glass-panel flex flex-col w-full h-[620px] select-none overflow-hidden border border-white/12 shadow-2xl">
+    <div className="relative glass-panel flex flex-col w-full h-[620px] select-none overflow-hidden">
       
       {/* 1. TOP-LEFT OVERLAY (India Landslide Risk Intelligence Text & CTA Buttons) */}
       <div className="absolute top-6 left-6 z-20 max-w-sm pointer-events-auto">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-tealAccent/15 border border-tealAccent/30 text-[10px] font-bold text-tealAccent uppercase tracking-widest mb-3">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-tealAccent/10 border border-tealAccent/20 text-[10px] font-bold text-tealAccent uppercase tracking-widest mb-3">
           AI-Powered Early Warning
         </span>
-        <h1 className="text-2xl sm:text-3xl font-black text-textWhite leading-tight tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-textWhite leading-tight tracking-tight">
           India Landslide <br />
           Risk Intelligence
         </h1>
@@ -211,13 +211,13 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
               setZoomState('india');
               onExploreMap();
             }}
-            className="px-4 py-2 rounded-full bg-tealAccent hover:bg-tealAccent/90 text-bgDark font-bold text-xs shadow-lg shadow-tealAccent/15 hover:scale-105 active:scale-95 transition-all duration-150"
+            className="px-4 py-2 rounded-lg bg-tealAccent hover:bg-tealAccent/90 text-bgDark font-bold text-xs transition-colors duration-150"
           >
             Explore Risk Map →
           </button>
           <button
             onClick={onViewAlerts}
-            className="px-4 py-2 rounded-full border border-white/10 bg-bgDark/60 hover:bg-white/5 text-textWhite font-semibold text-xs hover:scale-105 active:scale-95 transition-all duration-150"
+            className="px-4 py-2 rounded-lg border border-white/8 bg-bgDark/60 hover:bg-white/5 text-textWhite font-semibold text-xs transition-colors duration-150"
           >
             View Live Alerts
           </button>
@@ -226,7 +226,7 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
 
       {/* 2. MAP CONTROLS OVERLAY (Bottom-Left) */}
       {zoomState !== 'globe' && (
-        <div className="absolute bottom-6 left-6 z-20 glass-panel border-white/10 p-3 flex flex-col gap-3 w-44 shadow-xl">
+        <div className="absolute bottom-6 left-6 z-20 glass-panel p-3 flex flex-col gap-3 w-44">
           <span className="text-[9px] text-textMuted uppercase font-bold tracking-wider block border-b border-white/5 pb-1">
             Map Controls
           </span>
@@ -235,21 +235,21 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
           <div className="flex items-center gap-2 justify-between">
             <button 
               onClick={handleZoomIn}
-              className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-textMuted hover:text-textWhite hover:bg-white/10"
+              className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-textMuted hover:text-textWhite hover:bg-white/10"
               title="Zoom In"
             >
               <Plus className="w-4 h-4" />
             </button>
             <button 
               onClick={handleZoomOut}
-              className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-textMuted hover:text-textWhite hover:bg-white/10"
+              className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-textMuted hover:text-textWhite hover:bg-white/10"
               title="Zoom Out"
             >
               <Minus className="w-4 h-4" />
             </button>
             <button 
               onClick={handleResetZoom}
-              className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-textMuted hover:text-textWhite hover:bg-white/10"
+              className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-textMuted hover:text-textWhite hover:bg-white/10"
               title="Reset Map"
             >
               <Compass className="w-4 h-4" />
@@ -263,10 +263,10 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
                 setZoomState('northeast');
                 setZoomScaleFactor(1);
               }}
-              className={`w-full py-1 text-[9px] font-bold uppercase rounded-full border transition-all duration-150 ${
+              className={`w-full py-1.5 text-[9px] font-bold uppercase rounded-lg border transition-all duration-150 ${
                 zoomState === 'northeast' 
-                  ? 'bg-saffronAccent/15 border-saffronAccent text-saffronAccent' 
-                  : 'bg-white/5 border-white/8 text-textMuted hover:text-textWhite hover:border-white/12'
+                  ? 'bg-saffronAccent/10 border-saffronAccent/30 text-saffronAccent' 
+                  : 'bg-white/5 border-white/8 text-textMuted hover:text-textWhite'
               }`}
             >
               Focus on North-East
@@ -277,10 +277,10 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
                 setZoomState('india');
                 setZoomScaleFactor(1);
               }}
-              className={`w-full py-1 text-[9px] font-bold uppercase rounded-full border transition-all duration-150 ${
+              className={`w-full py-1.5 text-[9px] font-bold uppercase rounded-lg border transition-all duration-150 ${
                 zoomState === 'india' 
-                  ? 'bg-tealAccent/15 border-tealAccent text-tealAccent' 
-                  : 'bg-white/5 border-white/8 text-textMuted hover:text-textWhite hover:border-white/12'
+                  ? 'bg-tealAccent/10 border-tealAccent/30 text-tealAccent' 
+                  : 'bg-white/5 border-white/8 text-textMuted hover:text-textWhite'
               }`}
             >
               View All India

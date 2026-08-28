@@ -34,7 +34,7 @@ export const Methodology: React.FC = () => {
   ];
 
   return (
-    <div className="glass-panel p-5 flex flex-col lg:flex-row gap-6 lg:items-center justify-between border border-white/12">
+    <div className="glass-panel p-5 flex flex-col lg:flex-row gap-6 lg:items-center justify-between">
       
       {/* Left: Heading block */}
       <div className="max-w-xs shrink-0 flex flex-col gap-1">
@@ -51,7 +51,7 @@ export const Methodology: React.FC = () => {
         {steps.map((step, idx) => {
           const Icon = step.icon;
           return (
-            <div key={idx} className="flex-1 min-w-[200px] flex gap-3 p-3.5 rounded-xl border border-white/8 bg-white/3 relative overflow-hidden">
+            <div key={idx} className="flex-1 min-w-[200px] flex gap-3 p-3.5 rounded-lg border border-white/8 bg-white/3 relative overflow-hidden">
               
               {/* Icon */}
               <div className={`w-8 h-8 shrink-0 rounded-lg flex items-center justify-center border ${step.color} mt-0.5`}>

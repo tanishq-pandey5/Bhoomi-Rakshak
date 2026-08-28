@@ -175,7 +175,7 @@ const App: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => handleTabClick(tab.id)}
-                className={`w-full py-2.5 flex flex-col items-center justify-center gap-1 rounded-xl transition-all duration-200 group relative ${
+                className={`w-full py-2 flex flex-col items-center justify-center gap-1.5 rounded-lg transition-all duration-200 group relative ${
                   isAct 
                     ? 'text-tealAccent bg-tealAccent/10' 
                     : 'text-textMuted hover:text-textWhite hover:bg-white/5'
@@ -230,7 +230,7 @@ const App: React.FC = () => {
               </div>
 
               {/* Stats strip below map */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-5 glass-panel border-white/8 bg-panelBg/40">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-5 glass-panel bg-panelBg/40">
                 {[
                   { label: 'States Monitored', value: '36', detail: 'All India & UTs', icon: BarChart2, color: 'text-tealAccent' },
                   { label: 'High-Risk Regions', value: '8', detail: 'North-East Focus', icon: ShieldAlert, color: 'text-saffronAccent' },
@@ -245,7 +245,7 @@ const App: React.FC = () => {
                       <span className="text-[9px] text-textMuted uppercase font-bold tracking-wider block">
                         {stat.label}
                       </span>
-                      <span className="text-base font-black text-textWhite block font-mono mt-0.5">
+                      <span className="text-base font-bold text-textWhite block font-mono mt-0.5">
                         {stat.value}
                       </span>
                     </div>

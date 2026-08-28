@@ -314,14 +314,14 @@ export const ParameterGrid: React.FC<ParameterGridProps> = ({ profile }) => {
           }
 
           return (
-            <div key={key} className="glass-panel p-4 flex flex-col gap-3 glass-panel-hover border border-white/12">
+            <div key={key} className="glass-panel p-4 flex flex-col gap-3 glass-panel-hover">
               {/* Card Header: Icon + Status */}
               <div className="flex items-center justify-between">
-                <div className="p-2 rounded-xl bg-white/5 border border-white/8 text-textMuted">
+                <div className="p-2 rounded-lg bg-white/5 border border-white/8 text-textMuted">
                   <Icon className="w-4 h-4 text-tealAccent" />
                 </div>
                 
-                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${config.colorClass}`}>
+                <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase border ${config.colorClass}`}>
                   {config.label}
                 </span>
               </div>
@@ -343,7 +343,7 @@ export const ParameterGrid: React.FC<ParameterGridProps> = ({ profile }) => {
 
               {/* Progress bar and contribution percentage */}
               <div className="mt-auto flex flex-col gap-2">
-                <div className="w-full h-1.5 rounded-full bg-white/5 border border-white/5 overflow-hidden">
+                <div className="w-full h-1 rounded-full bg-white/5 overflow-hidden">
                   <div 
                     className="h-full rounded-full transition-all duration-1000"
                     style={{ 

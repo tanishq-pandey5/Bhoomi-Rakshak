@@ -21,19 +21,19 @@ body {
 
 /* Glass panel style */
 .glass-panel {
-  background: rgba(11, 38, 61, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
-  border-radius: 18px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(8, 25, 41, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-panel-hover:hover {
-  border-color: rgba(22, 184, 166, 0.35);
-  box-shadow: 0 16px 40px rgba(22, 184, 166, 0.15);
-  transform: translateY(-2px);
+  border-color: rgba(22, 184, 166, 0.25);
+  box-shadow: 0 8px 30px rgba(22, 184, 166, 0.08);
+  transform: translateY(-1px);
 }
 
 /* Custom Scrollbar */

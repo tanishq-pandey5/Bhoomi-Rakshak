@@ -96,7 +96,7 @@ export const DistrictTable: React.FC<DistrictTableProps> = ({ onSelectState, sel
             placeholder="Search district/state..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-9 pl-9 pr-4 rounded-xl bg-bgDark border border-white/10 text-xs text-textWhite placeholder:text-textMuted focus:outline-none focus:border-tealAccent transition-colors"
+            className="w-full h-9 pl-9 pr-4 rounded-lg bg-bgDark border border-white/8 text-xs text-textWhite placeholder:text-textMuted focus:outline-none focus:border-tealAccent transition-colors"
           />
         </div>
       </div>
@@ -169,22 +169,22 @@ export const DistrictTable: React.FC<DistrictTableProps> = ({ onSelectState, sel
                 <div
                   key={`${row.stateName}-${row.districtName}-mob`}
                   onClick={() => handleRowClick(row.stateName)}
-                  className={`p-4 rounded-2xl border flex flex-row gap-4 items-center transition-all duration-200 cursor-pointer ${
+                  className={`p-3.5 rounded-lg border flex flex-row gap-4 items-center transition-all duration-150 cursor-pointer ${
                     isSelected 
                       ? 'bg-tealAccent/5 border-tealAccent/30' 
                       : 'bg-white/5 border-white/8 hover:bg-white/8'
                   }`}
                 >
                   {/* Left: Square Index / telemetry badge */}
-                  <div className="w-16 h-16 shrink-0 rounded-xl bg-bgDark border border-white/10 flex flex-col items-center justify-center relative overflow-hidden">
+                  <div className="w-16 h-16 shrink-0 rounded-lg bg-bgDark border border-white/8 flex flex-col items-center justify-center relative overflow-hidden">
                     <span className="text-[10px] text-textMuted uppercase font-semibold">Rank</span>
-                    <span className="text-base font-black text-textWhite font-mono mt-0.5">#{row.rank}</span>
+                    <span className="text-sm font-bold text-textWhite font-mono mt-0.5">#{row.rank}</span>
                   </div>
 
                   {/* Right: Details block */}
                   <div className="flex-1 flex flex-col gap-1">
                     <div className="flex items-center justify-between gap-2">
-                      <h4 className="text-xs font-black text-textWhite">{row.districtName}</h4>
+                      <h4 className="text-xs font-bold text-textWhite">{row.districtName}</h4>
                       <span className={`px-1.5 py-0.5 rounded border text-[8px] font-bold uppercase ${getAlertBadgeStyles(row.alertStatus)}`}>
                         {row.alertStatus}
                       </span>
@@ -200,7 +200,7 @@ export const DistrictTable: React.FC<DistrictTableProps> = ({ onSelectState, sel
                     {/* Pill Action Button */}
                     <div className="flex justify-between items-center mt-1 pt-1 border-t border-white/5">
                       <span className="text-[9px] text-textMuted block">Trigger: {row.mainDriver}</span>
-                      <button className="px-3 py-0.5 rounded-full text-[9px] font-extrabold bg-textWhite text-bgDark hover:bg-textWhite/95 transition-colors">
+                      <button className="px-3 py-0.5 rounded text-[9px] font-bold bg-textWhite text-bgDark hover:bg-textWhite/90 transition-colors">
                         Select
                       </button>
                     </div>

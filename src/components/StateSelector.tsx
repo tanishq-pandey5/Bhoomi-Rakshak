@@ -55,7 +55,7 @@ export const StateSelector: React.FC<StateSelectorProps> = ({
           
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="w-full h-10 px-4 flex items-center justify-between rounded-xl bg-panelBg border border-white/12 hover:border-tealAccent/30 text-sm font-semibold text-textWhite transition-all duration-200"
+            className="w-full h-10 px-4 flex items-center justify-between rounded-lg bg-panelBg border border-white/8 hover:border-tealAccent/30 text-sm font-semibold text-textWhite transition-all duration-200"
           >
             <span>{selectedState || 'Search and select...'}</span>
             <ChevronDown className={`w-4 h-4 text-textMuted transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
@@ -143,10 +143,10 @@ export const StateSelector: React.FC<StateSelectorProps> = ({
               <button
                 key={state}
                 onClick={() => onSelectState(state)}
-                className={`px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all duration-200 ${
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 ${
                   isSel 
-                    ? 'bg-gradient-to-r from-saffronAccent to-saffronAccent/80 text-bgDark font-bold shadow-lg shadow-saffronAccent/10 border-transparent scale-105' 
-                    : 'bg-white/5 border border-white/8 text-textMuted hover:bg-white/10 hover:text-textWhite hover:border-white/15'
+                    ? 'bg-saffronAccent text-bgDark font-bold shadow-sm' 
+                    : 'bg-white/5 border border-white/8 text-textMuted hover:bg-white/8 hover:text-textWhite'
                 }`}
               >
                 {state}

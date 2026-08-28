@@ -92,7 +92,7 @@ export const StateDetailsPanel: React.FC<StateDetailsPanelProps> = ({ profile })
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-5 w-full h-full">
       
       {/* CARD 1: Selected State Risk Profile */}
-      <div className="glass-panel p-5 flex flex-col gap-4 border border-white/12 justify-between">
+      <div className="glass-panel p-5 flex flex-col gap-4 justify-between">
         <div>
           <span className="text-[10px] text-textMuted uppercase font-bold tracking-widest block">
             Selected State Risk Profile
@@ -118,15 +118,15 @@ export const StateDetailsPanel: React.FC<StateDetailsPanelProps> = ({ profile })
               </span>
             </div>
           </div>
-
+ 
           <div className="flex items-center gap-1.5 text-[10px] text-tealAccent font-semibold mt-3">
             <Calendar className="w-3.5 h-3.5" />
             <span>Forecast Valid for next 72 hours</span>
           </div>
-
+ 
           {/* Warning Advisory box */}
           <div 
-            className="mt-4 p-3 rounded-xl border text-[11px] leading-relaxed flex gap-2"
+            className="mt-4 p-3 rounded-lg border text-[11px] leading-relaxed flex gap-2"
             style={{ 
               backgroundColor: `${riskColor}0A`, 
               borderColor: `${riskColor}22`,
@@ -147,7 +147,7 @@ export const StateDetailsPanel: React.FC<StateDetailsPanelProps> = ({ profile })
       </div>
 
       {/* CARD 2: Risk Score & Circular Gauge */}
-      <div className="glass-panel p-5 flex flex-col justify-between border border-white/12 gap-4">
+      <div className="glass-panel p-5 flex flex-col justify-between gap-4">
         <div>
           <span className="text-[10px] text-textMuted uppercase font-bold tracking-widest block">
             Risk Score

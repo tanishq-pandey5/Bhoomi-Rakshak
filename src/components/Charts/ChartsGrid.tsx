@@ -44,7 +44,7 @@ export const ChartsGrid: React.FC<ChartsGridProps> = ({ profile }) => {
   const CustomTooltip = ({ active, payload, label, suffix = '' }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="glass-panel px-3 py-2 border-white/20 text-xs shadow-xl flex flex-col gap-0.5">
+        <div className="glass-panel px-3 py-2 text-xs flex flex-col gap-0.5">
           <p className="font-semibold text-textWhite">{label}</p>
           <p className="text-tealAccent font-bold font-mono">
             {payload[0].value}
