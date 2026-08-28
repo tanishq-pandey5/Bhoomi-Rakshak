@@ -82,10 +82,14 @@ export const DistrictTable: React.FC<DistrictTableProps> = ({ onSelectState, sel
     <div className="glass-panel p-5 flex flex-col h-full gap-4">
       
       {/* Header and Search */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/8 pb-4">
         <div>
-          <h3 className="text-lg font-semibold tracking-wide text-textWhite">Most Vulnerable Districts</h3>
-          <p className="text-xs text-textMuted mt-0.5 font-sans">National ranking based on current telemetry inputs</p>
+          <span className="text-[9px] text-[#8FA6B8] uppercase font-bold tracking-widest block mb-0.5">
+            Regional Threat Roster
+          </span>
+          <h3 className="text-base font-extrabold tracking-wide text-textWhite uppercase">
+            Most Vulnerable Districts
+          </h3>
         </div>
 
         {/* Search Input */}
@@ -107,7 +111,7 @@ export const DistrictTable: React.FC<DistrictTableProps> = ({ onSelectState, sel
         {/* DESKTOP TABLE VIEW */}
         <table className="hidden md:table w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="border-b border-white/10 text-textMuted uppercase font-bold tracking-wider">
+            <tr className="border-b border-white/8 text-textMuted uppercase font-bold tracking-wider text-[9px]">
               <th className="py-3 px-2 w-12 text-center">Rank</th>
               <th className="py-3 px-3">District</th>
               <th className="py-3 px-3">State</th>
