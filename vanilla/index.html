@@ -443,10 +443,11 @@
         // Leaflet Map Configuration
         // ============================================================
         const map = L.map('map', { zoomControl: false }).setView([22.5000, 82.5000], 5);
+        const MAPTILER_KEY = 'E334IQuy1Ty2ZKXYZOPp';
 
-        // 1. Dark premium CartoDB tiles without boundaries or labels (prevents international disputes)
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap &copy; CARTO'
+        // 1. Dark premium MapTiler tiles without boundaries or labels (prevents international disputes)
+        L.tileLayer(`https://api.maptiler.com/maps/darkmatter-nolabels/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`, {
+            attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a>'
         }).addTo(map);
 
         // 2. Fetch and overlay official, correct Indian national boundaries (encloses whole J&K, Ladakh, Aksai Chin)
@@ -464,10 +465,10 @@
             })
             .catch(err => console.warn("Failed to load official India GeoJSON boundaries:", err));
 
-        // 3. Add premium dark only labels overlay (so cities/towns show, but no political borders)
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
+        // 3. Add premium MapTiler dark only labels overlay (so cities/towns show, but no political borders)
+        L.tileLayer(`https://api.maptiler.com/maps/darkmatter-onlylabels/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`, {
             pane: 'shadowPane', // loads labels on top of vector layers
-            attribution: '&copy; CARTO'
+            attribution: '&copy; MapTiler'
         }).addTo(map);
 
         // Heatmap weighted points
