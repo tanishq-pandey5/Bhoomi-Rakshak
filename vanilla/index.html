@@ -444,25 +444,31 @@
         // ============================================================
         const map = L.map('map', { zoomControl: false }).setView([22.5000, 82.5000], 5);
 
-        // Dark premium CartoDB tiles (Free, no API key required)
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        // 1. Dark premium CartoDB tiles without boundaries or labels (prevents international disputes)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OpenStreetMap &copy; CARTO'
         }).addTo(map);
 
-        // Fetch and overlay correct official India boundaries (Free, no API key required)
-        fetch('https://raw.githubusercontent.com/geohacker/india/master/state/india_state.geojson')
+        // 2. Fetch and overlay official, correct Indian national boundaries (encloses whole J&K, Ladakh, Aksai Chin)
+        fetch('https://raw.githubusercontent.com/lux-in-tenebris-lucet/leaflet-india-boundary/main/data/india-boundary.geojson')
             .then(res => res.json())
             .then(geoJsonData => {
                 L.geoJSON(geoJsonData, {
                     style: {
-                        color: 'rgba(41, 169, 255, 0.25)', // elegant cyan border outline
-                        weight: 1.2,
+                        color: 'rgba(41, 169, 255, 0.35)', // elegant cyan border outline
+                        weight: 1.5,
                         fillColor: '#08264A',
                         fillOpacity: 0.12
                     }
                 }).addTo(map);
             })
             .catch(err => console.warn("Failed to load official India GeoJSON boundaries:", err));
+
+        // 3. Add premium dark only labels overlay (so cities/towns show, but no political borders)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
+            pane: 'shadowPane', // loads labels on top of vector layers
+            attribution: '&copy; CARTO'
+        }).addTo(map);
 
         // Heatmap weighted points
         const heatPoints = sites.map(s => [s.lat, s.lon, s.risk / 100]);
