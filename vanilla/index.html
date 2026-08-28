@@ -445,9 +445,9 @@
         const map = L.map('map', { zoomControl: false }).setView([22.5000, 82.5000], 5);
         const MAPTILER_KEY = 'E334IQuy1Ty2ZKXYZOPp';
 
-        // 1. Dark premium MapTiler tiles without boundaries or labels (prevents international disputes)
-        L.tileLayer(`https://api.maptiler.com/maps/darkmatter-nolabels/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`, {
-            attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a>'
+        // 1. Dark premium MapTiler tiles (Standard raster style)
+        L.tileLayer(`https://api.maptiler.com/maps/darkmatter/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`, {
+            attribution: '&copy; <a href="https://www.maptiler.com/">MapTiler</a> &copy; OpenStreetMap'
         }).addTo(map);
 
         // 2. Fetch and overlay official, correct Indian national boundaries (encloses whole J&K, Ladakh, Aksai Chin)
@@ -456,20 +456,14 @@
             .then(geoJsonData => {
                 L.geoJSON(geoJsonData, {
                     style: {
-                        color: 'rgba(41, 169, 255, 0.35)', // elegant cyan border outline
-                        weight: 1.5,
+                        color: 'rgba(41, 169, 255, 0.45)', // elegant cyan border outline
+                        weight: 1.6,
                         fillColor: '#08264A',
-                        fillOpacity: 0.12
+                        fillOpacity: 0.08
                     }
                 }).addTo(map);
             })
             .catch(err => console.warn("Failed to load official India GeoJSON boundaries:", err));
-
-        // 3. Add premium MapTiler dark only labels overlay (so cities/towns show, but no political borders)
-        L.tileLayer(`https://api.maptiler.com/maps/darkmatter-onlylabels/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`, {
-            pane: 'shadowPane', // loads labels on top of vector layers
-            attribution: '&copy; MapTiler'
-        }).addTo(map);
 
         // Heatmap weighted points
         const heatPoints = sites.map(s => [s.lat, s.lon, s.risk / 100]);
