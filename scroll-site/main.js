@@ -8,7 +8,6 @@ const loader = document.getElementById("loader");
 const loadbar = document.getElementById("loadbar");
 const scrollCue = document.getElementById("scroll-cue");
 const captions = [...document.querySelectorAll(".caption")];
-const heroOverlay = document.getElementById("hero-overlay");
 
 // Video Durations (will read dynamic metadata on load)
 let dur1 = 8.0;
@@ -82,7 +81,7 @@ function tick(now) {
   lastT = now;
 
   // Exponential LERP smoothing
-  const k = 1 - Math.exp(-dt * 9.5); 
+  const k = 1 - Math.exp(-dt * 9.5); // 0.06 - 0.12 equivalent range
   state.currentProgress += (state.targetProgress - state.currentProgress) * k;
   if (Math.abs(state.targetProgress - state.currentProgress) < 0.0005) {
     state.currentProgress = state.targetProgress;
@@ -91,30 +90,20 @@ function tick(now) {
   const p = state.currentProgress;
 
   if (state.isStoryVisible) {
-    // Fade out Hero overlay on scroll progress (0.0 -> 0.15)
-    if (heroOverlay) {
-      if (p <= 0.15) {
-        heroOverlay.style.opacity = (1.0 - p / 0.15).toFixed(3);
-        heroOverlay.style.display = "block";
-      } else {
-        heroOverlay.style.opacity = "0";
-        heroOverlay.style.display = "none";
-      }
-    }
-
     // ── Video Selection & Coordinated Crossfade ──
-    if (p < 0.72) {
-      // Scale scroll segment [0.0 - 0.72] to fit video 1
-      const p1 = p / 0.72;
+    if (p < 0.45) {
+      // Scale scroll segment [0.0 - 0.45] to fit video 1
+      const p1 = p / 0.45;
       seekVideo(video1, p1 * dur1);
       
       video1.style.opacity = "1";
       video2.style.opacity = "0";
     } 
-    else if (p >= 0.72 && p <= 0.78) {
+    else if (p >= 0.45 && p <= 0.55) {
       // Transition window: crossfade opacities
-      const crossProgress = (p - 0.72) / 0.06; // 0.0 to 1.0
+      const crossProgress = (p - 0.45) / 0.10; // 0.0 to 1.0
       
+      // Seek both close to transition point for seamless merge
       seekVideo(video1, dur1 - 0.05);
       seekVideo(video2, 0.05);
       
@@ -122,8 +111,8 @@ function tick(now) {
       video1.style.opacity = (1.0 - crossProgress).toFixed(3);
     } 
     else {
-      // Scale scroll segment [0.78 - 1.0] to fit video 2
-      const p2 = (p - 0.78) / 0.22;
+      // Scale scroll segment [0.55 - 1.0] to fit video 2
+      const p2 = (p - 0.55) / 0.45;
       seekVideo(video2, p2 * dur2);
       
       video2.style.opacity = "1";
@@ -190,9 +179,8 @@ if (timelinePath) {
 }
 
 function updateDynamicOverlays(p) {
-  // 1. Environmental Telemetry Nodes (Reveal: 0.82 -> 0.90)
+  // 1. Environmental Telemetry Nodes (Reveal: 0.50 -> 0.65)
   const triggerNode = (node, start, end) => {
-    if (!node) return;
     if (p >= start && p <= end) {
       node.style.opacity = "1";
       node.style.transform = "translate3d(0, 0, 0)";
@@ -202,49 +190,36 @@ function updateDynamicOverlays(p) {
     }
   };
 
-  triggerNode(overlayRain, 0.82, 0.90);
-  triggerNode(overlayMoisture, 0.83, 0.90);
-  triggerNode(overlaySlope, 0.84, 0.90);
-  triggerNode(overlayElevation, 0.85, 0.90);
-  triggerNode(overlayVibration, 0.86, 0.90);
-  triggerNode(overlayHistory, 0.87, 0.90);
+  triggerNode(overlayRain, 0.50, 0.65);
+  triggerNode(overlayMoisture, 0.52, 0.65);
+  triggerNode(overlaySlope, 0.54, 0.65);
+  triggerNode(overlayElevation, 0.56, 0.65);
+  triggerNode(overlayVibration, 0.58, 0.65);
+  triggerNode(overlayHistory, 0.60, 0.65);
 
-  if (p >= 0.82 && p <= 0.90) {
-    const factor = (p - 0.82) / 0.08;
-    const rainEl = document.getElementById("over-val-rain");
-    const moistEl = document.getElementById("over-val-moisture");
-    const vibeEl = document.getElementById("over-val-vibe");
-    
-    if (rainEl) rainEl.innerText = `${Math.round(15 + factor * 27)} mm/hr`;
-    if (moistEl) moistEl.innerText = `${Math.round(45 + factor * 23)}%`;
-    if (vibeEl) {
-      vibeEl.innerText = factor > 0.6 ? "CRITICAL ALERT" : "ELEVATED";
-      vibeEl.style.color = factor > 0.6 ? "var(--risk-red)" : "var(--saffron)";
-    }
+  if (p >= 0.50 && p <= 0.65) {
+    const factor = (p - 0.50) / 0.15;
+    document.getElementById("over-val-rain").innerText = `${Math.round(15 + factor * 27)} mm/hr`;
+    document.getElementById("over-val-moisture").innerText = `${Math.round(45 + factor * 33)}%`;
+    document.getElementById("over-val-vibe").innerText = factor > 0.6 ? "CRITICAL ALERT" : "ELEVATED";
+    document.getElementById("over-val-vibe").style.color = factor > 0.6 ? "var(--risk-red)" : "var(--saffron)";
   }
 
-  // 2. AI Convergence (0.90 -> 0.93)
-  if (p >= 0.90 && p <= 0.93) {
-    if (svgOverlay) svgOverlay.style.opacity = "1";
+  // 2. AI Convergence (0.65 -> 0.78)
+  if (p >= 0.65 && p <= 0.78) {
+    svgOverlay.style.opacity = "1";
     const targetX = window.innerWidth / 2;
     const targetY = window.innerHeight / 2;
 
-    if (aiCircle) {
-      aiCircle.setAttribute("cx", targetX);
-      aiCircle.setAttribute("cy", targetY);
-    }
-    if (aiText) {
-      aiText.setAttribute("x", targetX);
-      aiText.setAttribute("y", targetY + 4);
-    }
+    aiCircle.setAttribute("cx", targetX);
+    aiCircle.setAttribute("cy", targetY);
+    aiText.setAttribute("x", targetX);
+    aiText.setAttribute("y", targetY + 4);
 
-    const convProgress = (p - 0.90) / 0.03;
+    const convProgress = (p - 0.65) / 0.13;
 
     const setLineCoords = (lineEl, nodeEl) => {
-      if (!lineEl || !nodeEl) return;
-      const pin = nodeEl.querySelector(".telemetry-pin");
-      if (!pin) return;
-      const rect = pin.getBoundingClientRect();
+      const rect = nodeEl.querySelector(".telemetry-pin").getBoundingClientRect();
       const fromX = rect.left + 5;
       const fromY = rect.top + 5;
       const curX = fromX + (targetX - fromX) * convProgress;
@@ -263,15 +238,10 @@ function updateDynamicOverlays(p) {
     setLineCoords(document.getElementById("line-vibration"), overlayVibration);
     setLineCoords(document.getElementById("line-history"), overlayHistory);
 
-    if (aiCircle) {
-      aiCircle.style.opacity = convProgress >= 0.7 ? ((convProgress - 0.7) / 0.3).toFixed(3) : "0";
-    }
-    if (aiText) {
-      aiText.style.opacity = convProgress >= 0.7 ? ((convProgress - 0.7) / 0.3).toFixed(3) : "0";
-    }
+    aiCircle.style.opacity = convProgress >= 0.7 ? ((convProgress - 0.7) / 0.3).toFixed(3) : "0";
+    aiText.style.opacity = convProgress >= 0.7 ? ((convProgress - 0.7) / 0.3).toFixed(3) : "0";
 
-    const contractNode = (node) => {
-      if (!node) return;
+    const contractNode = (node, originalLeft, originalTop) => {
       node.style.opacity = (1 - convProgress).toFixed(2);
       const rect = node.getBoundingClientRect();
       const nodeX = rect.left + rect.width / 2;
@@ -289,55 +259,37 @@ function updateDynamicOverlays(p) {
     contractNode(overlayHistory);
 
   } else {
-    if (svgOverlay) svgOverlay.style.opacity = "0";
+    svgOverlay.style.opacity = "0";
   }
 
-  // 3. Risk Score Card (0.93 -> 0.96)
-  if (p >= 0.93 && p <= 0.96) {
-    if (overlayRiskScore) {
-      overlayRiskScore.style.opacity = "1";
-      overlayRiskScore.style.pointerEvents = "auto";
-    }
-    const riskProgress = (p - 0.93) / 0.03;
+  // 3. 72H Timeline (0.78 -> 0.88)
+  if (p >= 0.78 && p <= 0.88) {
+    overlayTimeline.style.opacity = "1";
+    const pathProgress = (p - 0.78) / 0.10;
+    const offset = pathTotalLength - (pathProgress * pathTotalLength);
+    timelinePath.style.strokeDashoffset = offset;
+
+    const point = timelinePath.getPointAtLength(pathProgress * pathTotalLength);
+    timelineMarker.setAttribute("cx", point.x);
+    timelineMarker.setAttribute("cy", point.y);
+    timelineMarker.style.opacity = "1";
+
+    tickNow.classList.toggle("active", pathProgress >= 0.0);
+    tick24.classList.toggle("active", pathProgress >= 0.33);
+    tick48.classList.toggle("active", pathProgress >= 0.66);
+    tick72.classList.toggle("active", pathProgress >= 0.95);
+  } else {
+    overlayTimeline.style.opacity = "0";
+  }
+
+  // 4. Warning Payoff & Risk Score (0.88 -> 0.98)
+  if (p >= 0.88 && p <= 0.98) {
+    overlayRiskScore.style.opacity = "1";
+    const riskProgress = (p - 0.88) / 0.10;
     const countTo = Math.round(riskProgress * 78);
-    const displayNum = document.getElementById("risk-display-num");
-    if (displayNum) displayNum.innerText = `${countTo}%`;
+    document.getElementById("risk-display-num").innerText = `${countTo}%`;
   } else {
-    if (overlayRiskScore) {
-      overlayRiskScore.style.opacity = "0";
-      overlayRiskScore.style.pointerEvents = "none";
-    }
-  }
-
-  // 4. 72H Timeline (0.96 -> 0.99)
-  if (p >= 0.96 && p <= 0.99) {
-    if (overlayTimeline) {
-      overlayTimeline.style.opacity = "1";
-      overlayTimeline.style.pointerEvents = "auto";
-    }
-    const pathProgress = (p - 0.96) / 0.03;
-    
-    if (timelinePath) {
-      const offset = pathTotalLength - (pathProgress * pathTotalLength);
-      timelinePath.style.strokeDashoffset = offset;
-      
-      const point = timelinePath.getPointAtLength(pathProgress * pathTotalLength);
-      if (timelineMarker) {
-        timelineMarker.setAttribute("cx", point.x);
-        timelineMarker.setAttribute("cy", point.y);
-        timelineMarker.style.opacity = "1";
-      }
-    }
-
-    if (tickNow) tickNow.classList.toggle("active", pathProgress >= 0.0);
-    if (tick24) tick24.classList.toggle("active", pathProgress >= 0.33);
-    if (tick48) tick48.classList.toggle("active", pathProgress >= 0.66);
-    if (tick72) tick72.classList.toggle("active", pathProgress >= 0.95);
-  } else {
-    if (overlayTimeline) {
-      overlayTimeline.style.opacity = "0";
-      overlayTimeline.style.pointerEvents = "none";
-    }
+    overlayRiskScore.style.opacity = "0";
   }
 }
 

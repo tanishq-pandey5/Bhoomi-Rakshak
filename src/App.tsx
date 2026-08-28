@@ -20,7 +20,9 @@ import {
   Calendar, 
   RefreshCw, 
   BarChart2, 
-  ShieldCheck
+  ShieldCheck,
+  X,
+  Activity
 } from 'lucide-react';
 
 interface Toast {
@@ -35,6 +37,7 @@ const App: React.FC = () => {
   const [zoomState, setZoomState] = useState<'globe' | 'india' | 'northeast'>('globe');
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [showHero, setShowHero] = useState<boolean>(true);
 
   // ML model prediction state
   const [mlPrediction, setMlPrediction] = useState<{
@@ -211,6 +214,114 @@ const App: React.FC = () => {
         {/* Core Layout Grid */}
         <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-10">
           
+          {/* Redesigned Hero overview based on visual direction reference */}
+          {showHero && (
+            <div className="glass-panel p-6 relative overflow-hidden flex flex-col gap-6 border border-tealAccent/20 bg-gradient-to-br from-panelBg/30 to-bgDark/45 transition-all duration-300">
+              <button 
+                onClick={() => setShowHero(false)}
+                className="absolute top-4 right-4 text-textMuted hover:text-textWhite focus:outline-none transition-colors"
+                title="Dismiss Overview"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* Left Column */}
+                <div className="lg:col-span-8 flex flex-col gap-4">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-tealAccent/10 border border-tealAccent/25 text-[10px] font-bold text-tealAccent uppercase tracking-widest w-fit">
+                    <Activity className="w-3.5 h-3.5 animate-pulse" /> India Landslide Intelligence Platform
+                  </span>
+                  <h1 className="text-3xl sm:text-4xl font-extrabold text-textWhite leading-tight tracking-tight">
+                    Protecting Lives <br />
+                    Before the Hills Break.
+                  </h1>
+                  <p className="text-xs sm:text-sm text-textMuted max-w-xl leading-relaxed">
+                    AI-powered landslide warning and geomechanical slope monitoring for India's vulnerable regions. Integrates satellite sensors, soil hydration data, and local vibration triggers to predict hazard indicators 72 hours in advance.
+                  </p>
+                  <div className="flex gap-3 mt-1.5">
+                    <button 
+                      onClick={() => handleScrollTo('dashboard')}
+                      className="px-4 py-2 rounded-lg bg-tealAccent hover:bg-tealAccent/90 text-bgDark font-bold text-xs transition-colors"
+                    >
+                      Explore Risk Map
+                    </button>
+                    <a 
+                      href="http://localhost:3000/" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 rounded-lg border border-white/10 hover:border-white/25 text-textWhite font-semibold text-xs transition-colors flex items-center gap-1.5"
+                    >
+                      Launch Cinematic Tour &rarr;
+                    </a>
+                  </div>
+                </div>
+
+                {/* Right Column */}
+                <div className="lg:col-span-4 flex flex-col gap-4">
+                  <div className="p-4 rounded-lg bg-white/2 border border-white/5 flex flex-col gap-2">
+                    <h4 className="text-[10px] text-tealAccent font-bold uppercase tracking-wider border-b border-white/5 pb-1">
+                      Why the North-East?
+                    </h4>
+                    <ul className="flex flex-col gap-1.5 text-[11px] text-[#8FA6B8]">
+                      <li className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-tealAccent shrink-0" />
+                        <span>Among the highest rainfall in the world</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-tealAccent shrink-0" />
+                        <span>Steep, highly fragile mountain slopes</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-tealAccent shrink-0" />
+                        <span>Millions living in vulnerable warning zones</span>
+                      </li>
+                    </ul>
+                  </div>
+                  
+                  <div className="p-3 rounded-lg bg-white/1 border border-white/5 text-[10px] text-[#8FA6B8] leading-relaxed">
+                    <span className="font-bold text-textWhite block uppercase tracking-wider text-[8px] mb-0.5">
+                      Operational Mandate
+                    </span>
+                    From satellite inputs and geo-climatic variables to local responders, delivering warning metrics before disaster strikes.
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Visual Roadmap */}
+              <div className="border-t border-white/5 pt-5 mt-2">
+                <span className="text-[9px] text-[#8FA6B8] uppercase font-bold tracking-widest block mb-3">
+                  Cinematic Storytelling Roadmap
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                  {[
+                    { step: '01', title: 'Earth Rotates', desc: 'A global environmental perspective' },
+                    { step: '02', title: 'Focus on India', desc: 'Narrowing telemetry to the subcontinent' },
+                    { step: '03', title: 'Zoom North-East', desc: 'Targeting areas at higher risk level' },
+                    { step: '04', title: 'Himalayan Hills', desc: 'Observing vulnerable, steep terrain' },
+                    { step: '05', title: 'Bhoomi Intelligence', desc: 'Translating parameters into warnings' }
+                  ].map((item, idx) => (
+                    <div key={idx} className="p-3 rounded-lg bg-white/2 border border-white/5 flex flex-col gap-1.5">
+                      <span className="text-[9px] font-bold font-mono text-tealAccent">{item.step}</span>
+                      <h5 className="text-[10px] font-bold uppercase text-textWhite">{item.title}</h5>
+                      <p className="text-[9px] text-textMuted leading-normal">{item.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Footer Optimized Badges */}
+              <div className="border-t border-white/5 pt-4 mt-1 flex flex-wrap gap-4 justify-between items-center text-[8px] text-[#8FA6B8] uppercase font-bold tracking-wider">
+                <span className="text-tealAccent">🚀 Performance Optimized Architecture</span>
+                <div className="flex flex-wrap gap-4">
+                  <span>• Preloaded Assets</span>
+                  <span>• GPU-Accelerated 60 FPS</span>
+                  <span>• Cinematic Interpolation</span>
+                  <span>• Video-Based Scrubber</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Main Map + Details Selection Section */}
           <div id="dashboard" className="grid grid-cols-1 lg:grid-cols-12 gap-6 scroll-mt-20">
             
