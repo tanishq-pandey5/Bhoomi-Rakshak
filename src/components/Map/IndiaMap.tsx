@@ -33,6 +33,7 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
   // Globe rotation state
   const [rotation, setRotation] = useState<number>(78); 
   const [hoveredState, setHoveredState] = useState<IndiaStatePath | null>(null);
+  const [hoveredStateName, setHoveredStateName] = useState<string | null>(null);
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const mapRef = useRef<SVGSVGElement | null>(null);
   const animationFrameId = useRef<number | null>(null);
@@ -141,6 +142,7 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
   const beaconPos = isIndiaVisible() ? globeProjection([78.96, 20.59]) : null;
 
   const handleMouseOver = (e: React.MouseEvent, stateName: string) => {
+    setHoveredStateName(stateName);
     const paths = stateGroups[stateName];
     if (paths && paths.length > 0) {
       setHoveredState(paths[0]);
@@ -155,20 +157,28 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
     }
   };
 
+  const handleMouseLeave = () => {
+    setHoveredState(null);
+    setHoveredStateName(null);
+  };
+
   const isNEState = (name: string) => {
     return ["Assam", "Arunachal Pradesh", "Meghalaya", "Manipur", "Mizoram", "Nagaland", "Tripura", "Sikkim"].includes(name);
   };
 
   const getStateOpacity = (name: string) => {
     if (regionFilter === 'North-East India' && !isNEState(name)) {
-      return 0.12;
+      return 0.1;
     }
     if (regionFilter === 'Himalayan Region') {
       const himalayan = ["Jammu and Kashmir", "Himachal Pradesh", "Uttarakhand", "Sikkim", "Arunachal Pradesh", "Ladakh"];
-      if (!himalayan.includes(name)) return 0.12;
+      if (!himalayan.includes(name)) return 0.1;
+    }
+    if (hoveredStateName && hoveredStateName !== name) {
+      return 0.45;
     }
     if (selectedState && selectedState !== name) {
-      return 0.3;
+      return 0.35;
     }
     return 1.0;
   };
@@ -194,16 +204,18 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
   const selectedStateProfile = selectedState ? getFullStateProfile(selectedState) : null;
   const selectedRiskColor = selectedStateProfile ? getRiskColor(selectedStateProfile.riskLevel) : '';
 
-  const getPrimaryDrivers = (profile: any) => {
+  const getPrimaryDriversWithWeights = (profile: any) => {
     const contr = profile.contributions;
     const sorted = Object.entries(contr).sort((a, b) => (b[1] as number) - (a[1] as number));
-    return sorted.slice(0, 3).map(([key]) => {
-      if (key === 'rainfall') return 'Heavy rainfall';
-      if (key === 'soilMoisture') return 'High soil moisture';
-      if (key === 'slope') return 'Steep terrain';
-      if (key === 'sensorVibration') return 'Slope vibrations';
-      if (key === 'historicalEvents') return 'Historical landslide activity';
-      return 'Lithological instability';
+    return sorted.slice(0, 3).map(([key, val]) => {
+      let name = 'Other Trigger';
+      let color = 'bg-tealAccent';
+      if (key === 'rainfall') { name = 'Heavy Rainfall'; color = 'bg-tealAccent'; }
+      else if (key === 'soilMoisture') { name = 'Soil Moisture'; color = 'bg-riskModerate'; }
+      else if (key === 'slope') { name = 'Steep Terrain'; color = 'bg-riskHigh'; }
+      else if (key === 'sensorVibration') { name = 'Slope Vibrations'; color = 'bg-riskVeryHigh'; }
+      else if (key === 'historicalEvents') { name = 'Historical Slides'; color = 'bg-riskCritical'; }
+      return { name, weight: val as number, color };
     });
   };
 
@@ -241,75 +253,37 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
         </div>
       </div>
 
-      {/* 2. MAP CONTROLS OVERLAY (Bottom-Left) */}
+      {/* 2. MAP CONTROLS OVERLAY (Floating Right Rail) */}
       {zoomState !== 'globe' && (
-        <div className="absolute bottom-6 left-6 z-20 glass-panel p-3 flex flex-col gap-3 w-44">
-          <span className="text-[9px] text-textMuted uppercase font-bold tracking-wider block border-b border-white/5 pb-1">
-            Map Controls
-          </span>
-          
-          {/* Zoom controls: Plus, Minus, Reset */}
-          <div className="flex items-center gap-2 justify-between">
-            <button 
-              onClick={handleZoomIn}
-              className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-textMuted hover:text-textWhite hover:bg-white/10"
-              title="Zoom In"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={handleZoomOut}
-              className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-textMuted hover:text-textWhite hover:bg-white/10"
-              title="Zoom Out"
-            >
-              <Minus className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={handleResetZoom}
-              className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-textMuted hover:text-textWhite hover:bg-white/10"
-              title="Reset Map"
-            >
-              <Compass className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Quick select zooms */}
-          <div className="flex flex-col gap-1.5 mt-1">
-            <button
-              onClick={() => {
-                setZoomState('northeast');
-                setZoomScaleFactor(1);
-              }}
-              className={`w-full py-1.5 text-[9px] font-bold uppercase rounded-lg border transition-all duration-150 ${
-                zoomState === 'northeast' 
-                  ? 'bg-saffronAccent/10 border-saffronAccent/30 text-saffronAccent' 
-                  : 'bg-white/5 border-white/8 text-textMuted hover:text-textWhite'
-              }`}
-            >
-              Focus on North-East
-            </button>
-            
-            <button
-              onClick={() => {
-                setZoomState('india');
-                setZoomScaleFactor(1);
-              }}
-              className={`w-full py-1.5 text-[9px] font-bold uppercase rounded-lg border transition-all duration-150 ${
-                zoomState === 'india' 
-                  ? 'bg-tealAccent/10 border-tealAccent/30 text-tealAccent' 
-                  : 'bg-white/5 border-white/8 text-textMuted hover:text-textWhite'
-              }`}
-            >
-              View All India
-            </button>
-          </div>
+        <div className="absolute right-6 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-1.5 pointer-events-auto">
+          <button 
+            onClick={handleZoomIn}
+            className="w-8 h-8 rounded bg-[#0B2030]/85 border border-white/8 flex items-center justify-center text-textMuted hover:text-textWhite hover:bg-white/10 transition-colors"
+            title="Zoom In"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={handleZoomOut}
+            className="w-8 h-8 rounded bg-[#0B2030]/85 border border-white/8 flex items-center justify-center text-textMuted hover:text-textWhite hover:bg-white/10 transition-colors"
+            title="Zoom Out"
+          >
+            <Minus className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={handleResetZoom}
+            className="w-8 h-8 rounded bg-[#0B2030]/85 border border-white/8 flex items-center justify-center text-textMuted hover:text-textWhite hover:bg-white/10 transition-colors"
+            title="Reset Map / Toggle Globe"
+          >
+            <Compass className="w-4 h-4" />
+          </button>
         </div>
       )}
 
       {/* 3. SELECTED STATE CONTEXTUAL RISK INFORMATION OVERLAY (Top-Right) */}
       {selectedStateProfile && zoomState !== 'globe' && (
         <div 
-          className="absolute top-6 right-6 z-20 glass-panel p-4 flex flex-col gap-3 w-60 pointer-events-auto border-t-2"
+          className="absolute top-6 right-6 z-20 glass-panel p-4 flex flex-col gap-3.5 w-60 pointer-events-auto border-t-2"
           style={{ borderTopColor: selectedRiskColor }}
         >
           <div className="flex items-center justify-between border-b border-white/5 pb-1.5">
@@ -338,15 +312,20 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
             </div>
           </div>
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <span className="text-[9px] text-textMuted uppercase font-bold tracking-wider">
               Primary Drivers:
             </span>
-            <div className="flex flex-col gap-1.5 pl-1">
-              {getPrimaryDrivers(selectedStateProfile).map((drv, idx) => (
-                <div key={idx} className="text-[10px] text-textWhite flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: selectedRiskColor }} />
-                  <span>{drv}</span>
+            <div className="flex flex-col gap-2 pl-0.5">
+              {getPrimaryDriversWithWeights(selectedStateProfile).map((drv, idx) => (
+                <div key={idx} className="flex flex-col gap-1">
+                  <div className="flex justify-between text-[10px] text-textWhite font-semibold">
+                    <span>{drv.name}</span>
+                    <span className="font-mono text-textMuted">{drv.weight}%</span>
+                  </div>
+                  <div className="w-full h-1 rounded-full bg-white/5 overflow-hidden">
+                    <div className={`h-full rounded-full ${drv.color}`} style={{ width: `${(drv.weight / 35) * 100}%` }} />
+                  </div>
                 </div>
               ))}
             </div>
@@ -362,6 +341,62 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
                selectedStateProfile.riskTrend === 'Falling' ? 'DECREASING' : 'STABLE'}
             </span>
           </div>
+        </div>
+      )}
+
+      {/* 4. RISK GRADE COLOR LEGEND (Bottom-Right) */}
+      {zoomState !== 'globe' && (
+        <div className="absolute bottom-6 right-6 z-20 glass-panel p-2.5 flex flex-col gap-1.5 w-32 shadow-lg pointer-events-auto">
+          <span className="text-[8px] text-[#8FA6B8] uppercase font-bold tracking-wider block border-b border-white/5 pb-1">
+            Risk Severity
+          </span>
+          <div className="flex flex-col gap-1">
+            {[
+              { label: 'Critical', color: '#991B1B' },
+              { label: 'Very High', color: '#EF4444' },
+              { label: 'High', color: '#F97316' },
+              { label: 'Moderate', color: '#FACC15' },
+              { label: 'Low', color: '#84CC16' },
+              { label: 'Very Low', color: '#22C55E' }
+            ].map((item, idx) => (
+              <div key={idx} className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-sm shrink-0" style={{ backgroundColor: item.color }} />
+                <span className="text-[8px] text-textMuted font-bold uppercase tracking-wide">{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 5. VIEWPORT FOCUS CONTROLS (Bottom-Left) */}
+      {zoomState !== 'globe' && (
+        <div className="absolute bottom-6 left-6 z-20 flex gap-2 pointer-events-auto">
+          <button
+            onClick={() => {
+              setZoomState('northeast');
+              setZoomScaleFactor(1);
+            }}
+            className={`px-3 py-1.5 text-[9px] font-bold uppercase rounded border transition-all duration-150 ${
+              zoomState === 'northeast' 
+                ? 'bg-saffronAccent/10 border-saffronAccent/30 text-saffronAccent' 
+                : 'bg-[#0B2030]/85 border-white/8 text-textMuted hover:text-textWhite'
+            }`}
+          >
+            Focus North-East
+          </button>
+          <button
+            onClick={() => {
+              setZoomState('india');
+              setZoomScaleFactor(1);
+            }}
+            className={`px-3 py-1.5 text-[9px] font-bold uppercase rounded border transition-all duration-150 ${
+              zoomState === 'india' 
+                ? 'bg-tealAccent/10 border-tealAccent/30 text-tealAccent' 
+                : 'bg-[#0B2030]/85 border-white/8 text-textMuted hover:text-textWhite'
+            }`}
+          >
+            View All India
+          </button>
         </div>
       )}
 
@@ -475,6 +510,7 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
                 const stateProfile = getFullStateProfile(stateName);
                 const riskColor = getRiskColor(stateProfile.riskLevel);
                 const isSelected = selectedState === stateName;
+                const isHovered = hoveredStateName === stateName;
                 const opacity = getStateOpacity(stateName);
 
                 return (
@@ -482,17 +518,17 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
                     key={stateName}
                     onClick={() => onSelectState(stateName)}
                     onMouseMove={(e) => handleMouseOver(e, stateName)}
-                    onMouseLeave={() => setHoveredState(null)}
+                    onMouseLeave={handleMouseLeave}
                     className="cursor-pointer group"
-                    style={{ opacity, transition: 'opacity 0.3s ease' }}
+                    style={{ opacity, transition: 'opacity 0.25s ease' }}
                   >
                     {paths.map((p, idx) => (
                       <path
                         key={idx}
                         d={p.path}
                         fill={riskColor}
-                        stroke={isSelected ? '#F5F7FA' : 'rgba(5, 19, 33, 0.7)'}
-                        strokeWidth={isSelected ? 2.2 : 0.6}
+                        stroke={isHovered ? '#16B8A6' : isSelected ? '#F5F7FA' : 'rgba(5, 19, 33, 0.7)'}
+                        strokeWidth={isHovered ? 1.5 : isSelected ? 2.2 : 0.6}
                         className="transition-all duration-200 group-hover:brightness-105"
                       />
                     ))}
@@ -500,6 +536,36 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
                 );
               })}
             </g>
+
+            {/* Glowing Live Telemetry Pin centroid indicator */}
+            {selectedState && zoomState === 'india' && (() => {
+              const paths = stateGroups[selectedState];
+              if (paths && paths.length > 0) {
+                const [cx, cy] = paths[0].centroid;
+                return (
+                  <g className="pointer-events-none">
+                    <circle 
+                      cx={cx} 
+                      cy={cy} 
+                      r={12} 
+                      fill="none" 
+                      stroke="#22C55E" 
+                      strokeWidth={1.5} 
+                      className="animate-ping" 
+                      style={{ transformOrigin: `${cx}px ${cy}px` }} 
+                    />
+                    <circle 
+                      cx={cx} 
+                      cy={cy} 
+                      r={4.5} 
+                      fill="#22C55E" 
+                      stroke="#F5F7FA" 
+                      strokeWidth={1} 
+                    />
+                  </g>
+                );
+              }
+            })()}
 
             <defs>
               <radialGradient id="neSaffronGlowMap" cx="50%" cy="50%" r="50%">
