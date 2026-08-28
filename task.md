@@ -6,4 +6,5 @@
 - `[x]`: Reconfigure environmental signals and gauge cards to have side-by-side elements and larger proportions
 - `[x]`: Expand forecast area charts to full heights (420px and 360px) with custom tooltips
 - `[x]`: Rebuild alerts timeline, districts tables, and horizontal pipeline steps
+- `[x]`: Integrate new HTML dashboard (Leaflet + Chart.js) with premium styles and interactive sync
 - `[x]`: Commit and push to `dashboard-refactor` remote branch
