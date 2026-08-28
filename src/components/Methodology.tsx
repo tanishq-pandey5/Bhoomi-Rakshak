@@ -38,8 +38,11 @@ export const Methodology: React.FC = () => {
       
       {/* Left: Heading block */}
       <div className="max-w-xs shrink-0 flex flex-col gap-1">
-        <h3 className="text-base font-black text-textWhite tracking-tight uppercase">
-          How Bhoomi Rakshak Works
+        <span className="text-[9px] text-[#71839C] uppercase font-bold tracking-widest block mb-0.5">
+          Operational Pipeline
+        </span>
+        <h3 className="text-base font-extrabold tracking-wide text-textWhite uppercase">
+          How Bhoomi Rakshak Sees the Risk
         </h3>
         <p className="text-[11px] text-textMuted leading-relaxed">
           Bhoomi Rakshak combines environmental, geological, historical, and sensor data to forecast landslide probability for the next 72 hours.

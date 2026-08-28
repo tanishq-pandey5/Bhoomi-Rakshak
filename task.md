@@ -1,0 +1,5 @@
+- `[ ]` Update `src/index.css` for night-sky theme, space stars, and custom risk color variables
+- `[ ]` Update `src/components/Navbar.tsx` to center links and add right-side live indicators
+- `[ ]` Restructure `src/components/Details/StateDetailsPanel.tsx` for side-by-side profile and glowing arc gauge
+- `[ ]` Update `src/components/Map/IndiaMap.tsx` to add bottom legend, zoom controls, and NE focus markers
+- `[ ]` Restructure `src/App.tsx` to arrange Hero title, metrics header, left column grids, and right diagnostics column
