@@ -63,27 +63,40 @@ export const ParameterGrid: React.FC<ParameterGridProps> = ({ profile }) => {
   ];
 
   return (
-    <div className="flex flex-col gap-3.5 w-full">
-      <span className="text-[10px] text-[#71839C] uppercase font-bold tracking-widest block">
-        Environmental Signals
-      </span>
-      <div className="grid grid-cols-2 gap-3.5">
+    <div className="flex flex-col gap-6 w-full">
+      
+      {/* Editorial Header */}
+      <div>
+        <span className="text-[10px] text-[#71839C] uppercase font-bold tracking-widest block">
+          Telemetry Readings
+        </span>
+        <h3 className="text-xl font-bold uppercase tracking-wider text-[#F5F7FB] mt-1">
+          Environmental Signals
+        </h3>
+      </div>
+
+      {/* 2x3 Grid with generous spacing and height */}
+      <div className="grid grid-cols-2 gap-5">
         {signals.map((sig, idx) => {
           const Icon = sig.icon;
           const color = getSeverityColorClass(sig.status);
           return (
-            <div key={idx} className="p-4 rounded-lg bg-[#06152B]/45 border border-[#29A9FF]/8 flex flex-col justify-between h-24">
+            <div 
+              key={idx} 
+              className="p-6 rounded-2xl bg-[#081830]/40 border border-white/5 flex flex-col justify-between h-[135px] hover:border-white/10 transition-colors duration-300"
+            >
               <div className="flex items-center justify-between">
-                <span className="text-[9px] text-[#A7B6CC] font-bold uppercase tracking-wider block leading-none">
+                <span className="text-[10px] text-[#A7B6CC] font-bold uppercase tracking-wider block leading-none">
                   {sig.label}
                 </span>
-                <Icon className="w-3.5 h-3.5 text-[#55C7FF]" />
+                <Icon className="w-4 h-4 text-[#29A9FF]" />
               </div>
               <div>
-                <span className="text-lg font-bold text-[#F5F7FA] font-mono block leading-none">
+                {/* Large dominant value */}
+                <span className="text-3xl font-extrabold text-[#F5F7FB] font-mono block leading-none">
                   {sig.value}
                 </span>
-                <span className={`text-[8px] font-extrabold uppercase tracking-widest block mt-2 leading-none ${color}`}>
+                <span className={`text-[9px] font-extrabold uppercase tracking-widest block mt-3.5 leading-none ${color}`}>
                   {sig.status}
                 </span>
               </div>
@@ -91,6 +104,7 @@ export const ParameterGrid: React.FC<ParameterGridProps> = ({ profile }) => {
           );
         })}
       </div>
+
     </div>
   );
 };
