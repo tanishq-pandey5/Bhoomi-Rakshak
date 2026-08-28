@@ -1,5 +1,9 @@
-- `[x]` Update `src/index.css` for night-sky theme, space stars, and custom risk color variables
-- `[x]` Update `src/components/Navbar.tsx` to center links and add right-side live indicators
-- `[x]` Restructure `src/components/Details/StateDetailsPanel.tsx` for side-by-side profile and glowing arc gauge
-- `[x]` Update `src/components/Map/IndiaMap.tsx` to add bottom legend, zoom controls, and NE focus markers
-- `[x]` Restructure `src/App.tsx` to arrange Hero title, metrics header, left column grids, and right diagnostics column
+- `[x]`: Implement vertical storytelling layout and generous vertical breathing room
+- `[x]`: Apply page constraints (max-width 1440px, px-16 margins)
+- `[x]`: Scale typography hierarchies (headings 56px-72px, threat scores 72px-100px)
+- `[x]`: Eliminate 90% of visible rectangular borders
+- `[x]`: Redesign IndiaMap to have transparent backgrounds, height 650px, and glowing boundaries
+- `[x]`: Reconfigure environmental signals and gauge cards to have side-by-side elements and larger proportions
+- `[x]`: Expand forecast area charts to full heights (420px and 360px) with custom tooltips
+- `[x]`: Rebuild alerts timeline, districts tables, and horizontal pipeline steps
+- `[x]`: Commit and push to `dashboard-refactor` remote branch

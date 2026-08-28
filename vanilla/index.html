@@ -1,783 +1,885 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bhoomi Rakshak: AI-Powered 72-Hour Landslide Prediction Dashboard</title>
-  
-  <!-- CDNs -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
-  <!-- Map Paths Data Module -->
-  <script src="mapData.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhoomi Rakshak | Landslide Risk Monitoring Portal</title>
 
-  <!-- Tailwind Configuration -->
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            bgDark: '#051321',
-            panelBg: '#0B263D',
-            tealAccent: '#16B8A6',
-            saffronAccent: '#FF9F43',
-            textWhite: '#F5F7FA',
-            textMuted: '#9FB3C8',
-            riskVeryLow: '#22C55E',
-            riskLow: '#84CC16',
-            riskModerate: '#FACC15',
-            riskHigh: '#F97316',
-            riskVeryHigh: '#EF4444',
-            riskCritical: '#991B1B',
-          }
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Leaflet & Heatmap CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+    <!-- ChartJS & Lucide Icons CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --risk-color: #32D583;
         }
-      }
-    }
-  </script>
 
-  <!-- Custom CSS style overrides -->
-  <style>
-    body {
-      background: radial-gradient(circle at 50% -15%, rgba(22, 184, 166, 0.22), transparent 48%),
-                  radial-gradient(circle at 50% 115%, rgba(22, 184, 166, 0.16), transparent 48%),
-                  #051321;
-      color: #F5F7FA;
-      font-family: ui-sans-serif, system-ui, sans-serif;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+        * { box-sizing: border-box; }
 
-    .glass-panel {
-      background: rgba(11, 38, 61, 0.72);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
-      border-radius: 18px;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+        body {
+            background-color: #030B1C;
+            background-image: 
+                radial-gradient(circle at 15% 10%, rgba(91, 108, 231, 0.2), transparent 30%),
+                radial-gradient(circle at 80% 35%, rgba(41, 169, 255, 0.1), transparent 30%),
+                linear-gradient(180deg, #050A20 0%, #061B38 50%, #020817 100%);
+            color: #F5F7FB;
+            font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
 
-    .glass-panel-hover:hover {
-      background: rgba(11, 38, 61, 0.85);
-      border-color: rgba(22, 184, 166, 0.35);
-      box-shadow: 0 20px 48px rgba(22, 184, 166, 0.08);
-      transform: translateY(-2px);
-    }
+        /* Starry Atmosphere Overlay */
+        body::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            opacity: 0.12;
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 1.2px, transparent 20px),
+                radial-gradient(white, rgba(255,255,255,.1) 1.5px, transparent 30px);
+            background-size: 280px 280px, 180px 180px;
+            background-position: 0 0, 40px 60px;
+        }
 
-    /* Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.02);
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 3px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(22, 184, 166, 0.4);
-    }
+        .glass-card {
+            background: rgba(8, 24, 48, 0.45);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(120, 180, 255, 0.08);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
 
-    /* Flashing red border for Critical alarms */
-    .critical-border-alarm {
-      animation: flash-border 1.5s infinite;
-    }
-    @keyframes flash-border {
-      0%, 100% { border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 16px 40px rgba(239, 68, 68, 0.1); }
-      50% { border-color: rgba(239, 68, 68, 1); box-shadow: 0 16px 40px rgba(239, 68, 68, 0.35); }
-    }
-  </style>
+        .glass-pill {
+            background: rgba(8, 24, 48, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(120, 180, 255, 0.08);
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+            border-radius: 16px;
+            z-index: 1;
+        }
+
+        /* ---------- Weather Ambient FX ---------- */
+        .weather-fx {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .rain-drop {
+            position: absolute;
+            top: -10%;
+            width: 1px;
+            height: 60px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(41, 169, 255, 0.25));
+            animation: fall linear infinite;
+        }
+        @keyframes fall {
+            to { transform: translateY(115vh); }
+        }
+        .mist-layer {
+            position: absolute;
+            bottom: 0; left: -20%;
+            width: 140%; height: 40%;
+            background: radial-gradient(ellipse at center, rgba(41, 169, 255, 0.03), transparent 70%);
+            filter: blur(20px);
+            animation: drift 45s ease-in-out infinite alternate;
+        }
+        @keyframes drift {
+            from { transform: translateX(-2%); }
+            to { transform: translateX(2%); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .rain-drop, .mist-layer { animation: none !important; }
+        }
+
+        /* ---------- Pulsing Map Node Markers ---------- */
+        .pulse-marker { position: relative; width: 16px; height: 16px; }
+        .pulse-marker .core {
+            position: absolute; inset: 3.5px; border-radius: 999px;
+            box-shadow: 0 0 6px rgba(0,0,0,0.5);
+        }
+        .pulse-marker .ring {
+            position: absolute; inset: 0; border-radius: 999px;
+            animation: marker-pulse 2s ease-out infinite;
+        }
+        @keyframes marker-pulse {
+            0%   { transform: scale(0.5); opacity: 0.8; }
+            70%  { transform: scale(2.2); opacity: 0; }
+            100% { transform: scale(2.2); opacity: 0; }
+        }
+
+        /* ---------- Emergency Banner ---------- */
+        #alert-banner {
+            transform: translateY(-120%);
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #alert-banner.show { transform: translateY(0); }
+
+        /* ---------- Sliders ---------- */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 4px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.08);
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px; height: 14px;
+            border-radius: 999px;
+            background: #29A9FF;
+            box-shadow: 0 0 0 3px rgba(41, 169, 255, 0.2);
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        #control-panel {
+            transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, margin 0.4s ease;
+            overflow: hidden;
+        }
+        #control-panel.collapsed {
+            max-height: 0 !important;
+            opacity: 0;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+        }
+
+        /* Leaflet popup overrides */
+        .leaflet-popup-content-wrapper {
+            background: rgba(6, 21, 43, 0.95) !important;
+            border: 1px solid rgba(120, 180, 255, 0.15) !important;
+            color: #F5F7FB !important;
+            backdrop-filter: blur(10px);
+            border-radius: 12px !important;
+        }
+        .leaflet-popup-tip {
+            background: rgba(6, 21, 43, 0.95) !important;
+            border: 1px solid rgba(120, 180, 255, 0.15) !important;
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 99px; }
+    </style>
 </head>
-<body class="flex flex-row antialiased">
+<body class="p-6 md:p-12 flex justify-center items-start">
 
-  <!-- 1. LEFT SIDEBAR NAVIGATION PANEL -->
-  <aside class="hidden lg:flex flex-col w-20 xl:w-24 shrink-0 border-r border-white/10 bg-bgDark/45 backdrop-blur-md sticky top-0 h-screen justify-between items-center py-6 z-30">
-    <!-- Top Logo Shield -->
-    <div class="flex flex-col items-center gap-1 cursor-pointer" onclick="scrollToSection('dashboard')">
-      <div class="relative flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-tealAccent/20 to-tealAccent/5 border border-tealAccent/30 text-tealAccent">
-        <i data-lucide="shield-alert" class="w-5 h-5"></i>
-      </div>
+    <!-- Weather particles -->
+    <div class="weather-fx" id="weather-fx">
+        <div class="mist-layer"></div>
     </div>
 
-    <!-- Center Menu -->
-    <nav class="flex flex-col gap-6 w-full px-2">
-      <button onclick="navigateTab('dashboard')" id="btn-side-dashboard" class="w-full py-2.5 flex flex-col items-center justify-center gap-1 rounded-xl text-tealAccent bg-tealAccent/10 group relative" title="Dashboard">
-        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-        <span class="text-[8px] uppercase tracking-wide font-bold">Dash</span>
-      </button>
-      <button onclick="navigateTab('risk-map')" id="btn-side-risk-map" class="w-full py-2.5 flex flex-col items-center justify-center gap-1 rounded-xl text-textMuted hover:text-textWhite hover:bg-white/5 group relative" title="Risk Map">
-        <i data-lucide="map" class="w-5 h-5"></i>
-        <span class="text-[8px] uppercase tracking-wide font-bold">Map</span>
-      </button>
-      <button onclick="navigateTab('alerts')" id="btn-side-alerts" class="w-full py-2.5 flex flex-col items-center justify-center gap-1 rounded-xl text-textMuted hover:text-textWhite hover:bg-white/5 group relative" title="Alerts">
-        <i data-lucide="bell" class="w-5 h-5"></i>
-        <span class="text-[8px] uppercase tracking-wide font-bold">Alerts</span>
-      </button>
-      <button onclick="navigateTab('methodology')" id="btn-side-methodology" class="w-full py-2.5 flex flex-col items-center justify-center gap-1 rounded-xl text-textMuted hover:text-textWhite hover:bg-white/5 group relative" title="Methodology">
-        <i data-lucide="cpu" class="w-5 h-5"></i>
-        <span class="text-[8px] uppercase tracking-wide font-bold">Model</span>
-      </button>
-      <button onclick="navigateTab('footer')" id="btn-side-footer" class="w-full py-2.5 flex flex-col items-center justify-center gap-1 rounded-xl text-textMuted hover:text-textWhite hover:bg-white/5 group relative" title="About Us">
-        <i data-lucide="info" class="w-5 h-5"></i>
-        <span class="text-[8px] uppercase tracking-wide font-bold">About</span>
-      </button>
-    </nav>
-
-    <!-- Bottom Pulse -->
-    <div class="flex flex-col items-center gap-1">
-      <span class="relative flex h-2.5 w-2.5">
-        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
-        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
-      </span>
-      <span class="text-[8px] text-green-500 font-extrabold uppercase tracking-widest mt-1">SYSTEM ONLINE</span>
-    </div>
-  </aside>
-
-  <!-- 2. MAIN CONTENT WRAPPER -->
-  <div class="flex-1 flex flex-col min-w-0">
-    
-    <!-- Top Sticky Header -->
-    <header class="sticky top-0 z-20 w-full border-b border-white/10 bg-bgDark/80 backdrop-blur-md">
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        
-        <!-- Left Brand Logo -->
-        <div class="flex items-center gap-3">
-          <div class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-tealAccent/20 to-tealAccent/5 border border-tealAccent/30 text-tealAccent">
-            <i data-lucide="mountain" class="w-5 h-5 absolute translate-y-[-2px]"></i>
-            <i data-lucide="shield" class="w-6 h-6 opacity-65"></i>
-          </div>
-          <div>
-            <div class="flex items-center gap-1.5">
-              <span class="text-base font-extrabold tracking-wider text-textWhite font-sans uppercase">
-                Bhoomi Rakshak
-              </span>
-              <span class="px-1.5 py-0.5 rounded bg-tealAccent/15 border border-tealAccent/20 text-[9px] font-bold text-tealAccent uppercase tracking-widest">
-                v2.0
-              </span>
-            </div>
-            <p class="text-[10px] text-textMuted font-medium tracking-wide">
-              Early Signals. Safer Hills.
-            </p>
-          </div>
-        </div>
-
-        <!-- Center Nav Links -->
-        <nav class="hidden md:flex items-center gap-6">
-          <button onclick="scrollToSection('dashboard')" class="text-xs font-semibold text-tealAccent transition-colors duration-150 relative pb-1">
-            Dashboard
-            <span class="absolute bottom-0 left-0 w-full h-[2px] bg-tealAccent rounded-full"></span>
-          </button>
-          <button onclick="scrollToSection('risk-map')" class="text-xs font-semibold text-textMuted hover:text-textWhite transition-colors duration-150">Risk Map</button>
-          <button onclick="scrollToSection('alerts')" class="text-xs font-semibold text-textMuted hover:text-textWhite transition-colors duration-150">Alerts</button>
-          <button onclick="scrollToSection('methodology')" class="text-xs font-semibold text-textMuted hover:text-textWhite transition-colors duration-150">Methodology</button>
-          <button onclick="scrollToSection('footer')" class="text-xs font-semibold text-textMuted hover:text-textWhite transition-colors duration-150">About Us</button>
-        </nav>
-
-        <!-- Right Header telemetry status -->
-        <div class="flex items-center gap-4">
-          <!-- Early warning siren mute/unmute toggle -->
-          <button onclick="toggleAudioAlarm()" id="btn-audio-siren" class="p-2 rounded-full border border-white/10 bg-white/5 text-textMuted hover:text-textWhite hover:bg-white/10 transition-all flex items-center justify-center" title="Mute/Unmute early warning audio alarms">
-            <i data-lucide="volume-2" class="w-4 h-4 text-tealAccent"></i>
-          </button>
-
-          <div class="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/8 text-[10px] text-textMuted font-medium">
-            <span class="relative flex h-2 w-2">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tealAccent opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-2 w-2 bg-tealAccent"></span>
-            </span>
-            <span class="font-bold text-textWhite">LIVE MONITORING</span>
-            <span class="opacity-50">|</span>
-            <span>Sync: <b id="header-sync-label">2 min ago</b></span>
-          </div>
-
-          <!-- Notification indicator bell -->
-          <button onclick="scrollToSection('alerts')" class="relative p-2 rounded-full border border-white/10 bg-white/5 text-textMuted hover:text-textWhite hover:bg-white/10 transition-colors" title="View alerts stream">
-            <i data-lucide="bell" class="w-4 h-4"></i>
-            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-riskVeryHigh animate-pulse"></span>
-          </button>
-
-          <!-- Profile badge icon -->
-          <div class="flex items-center justify-center w-8 h-8 rounded-full border border-white/10 bg-white/5 text-textMuted hover:text-textWhite cursor-pointer">
-            <i data-lucide="user" class="w-4 h-4"></i>
-          </div>
-        </div>
-
-      </div>
-    </header>
-
-    <!-- Main Body Grid Container -->
-    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-10">
-      
-      <!-- Grid 1: Map Visualizer (Left) + Detail Selectors (Right) -->
-      <div id="dashboard" class="grid grid-cols-1 lg:grid-cols-12 gap-6 scroll-mt-20">
-        
-        <!-- Left Side: Map card & stats -->
-        <div class="lg:col-span-7 xl:col-span-8 flex flex-col gap-6">
-          
-          <div class="relative glass-panel flex flex-col w-full h-[620px] select-none overflow-hidden border border-white/12 shadow-2xl">
-            
-            <!-- Map Heading Overlay -->
-            <div class="absolute top-6 left-6 z-20 max-w-sm pointer-events-auto">
-              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-tealAccent/15 border border-tealAccent/30 text-[10px] font-bold text-tealAccent uppercase tracking-widest mb-3">
-                AI-Powered Early Warning
-              </span>
-              <h1 class="text-2xl sm:text-3xl font-black text-textWhite leading-tight tracking-tight">
-                India Landslide <br />
-                Risk Intelligence
-              </h1>
-              <p class="mt-2 text-xs text-textMuted leading-relaxed">
-                Monitor rainfall, soil, terrain, seismic, and sensor indicators to predict landslide risk up to 72 hours in advance.
-              </p>
-              <div class="mt-4 flex gap-2">
-                <button onclick="setMapZoom('india')" class="px-4 py-2 rounded-full bg-tealAccent hover:bg-tealAccent/90 text-bgDark font-bold text-xs shadow-lg shadow-tealAccent/15 hover:scale-105 active:scale-95 transition-all duration-150">
-                  Explore Risk Map →
-                </button>
-                <button onclick="scrollToSection('alerts')" class="px-4 py-2 rounded-full border border-white/10 bg-bgDark/60 hover:bg-white/5 text-textWhite font-semibold text-xs hover:scale-105 active:scale-95 transition-all duration-150">
-                  View Live Alerts
-                </button>
-              </div>
-            </div>
-
-            <!-- Map Controls Panel (Bottom-Left) -->
-            <div id="map-controls-box" class="absolute bottom-6 left-6 z-20 glass-panel border-white/10 p-3 flex flex-col gap-3 w-44 shadow-xl hidden">
-              <span class="text-[9px] text-textMuted uppercase font-bold tracking-wider block border-b border-white/5 pb-1">
-                Map Controls
-              </span>
-              
-              <div class="flex items-center gap-2 justify-between">
-                <button onclick="adjustMapZoomScale(0.25)" class="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-textMuted hover:text-textWhite hover:bg-white/10" title="Zoom In">
-                  <i data-lucide="plus" class="w-4 h-4"></i>
-                </button>
-                <button onclick="adjustMapZoomScale(-0.25)" class="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-textMuted hover:text-textWhite hover:bg-white/10" title="Zoom Out">
-                  <i data-lucide="minus" class="w-4 h-4"></i>
-                </button>
-                <button onclick="resetMapZoom()" class="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-textMuted hover:text-textWhite hover:bg-white/10" title="Reset View">
-                  <i data-lucide="compass" class="w-4 h-4"></i>
-                </button>
-              </div>
-
-              <div class="flex flex-col gap-1.5 mt-1">
-                <button onclick="setMapZoom('northeast')" id="btn-zoom-ne" class="w-full py-1 text-[9px] font-bold uppercase rounded-full border bg-white/5 border-white/8 text-textMuted hover:text-textWhite hover:border-white/12 transition-all">
-                  Focus on North-East
-                </button>
-                <button onclick="setMapZoom('india')" id="btn-zoom-india" class="w-full py-1 text-[9px] font-bold uppercase rounded-full border bg-white/5 border-white/8 text-textMuted hover:text-textWhite hover:border-white/12 transition-all">
-                  View All India
-                </button>
-              </div>
-            </div>
-
-            <!-- SVG Render Box -->
-            <div class="relative flex-1 flex items-center justify-center w-full h-full">
-              <svg id="svg-map" class="w-full h-full transition-all duration-500 ease-in-out" viewBox="0 0 800 800"></svg>
-            </div>
-
-            <!-- Globe explore overlay -->
-            <div id="globe-explore-prompt" class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 z-20">
-              <button onclick="setMapZoom('india')" class="px-6 py-2.5 rounded-full bg-gradient-to-r from-tealAccent to-tealAccent/80 hover:from-tealAccent hover:to-tealAccent text-bgDark font-bold text-xs tracking-wider shadow-lg hover:shadow-tealAccent/25 hover:scale-105 transition-all">
-                EXPLORE RISK MAP
-              </button>
-              <span class="text-[9px] text-textMuted tracking-wider font-semibold uppercase">Click to render national map</span>
-            </div>
-
-          </div>
-
-          <!-- Stats Strip -->
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-5 glass-panel border-white/8 bg-panelBg/40">
-            <div class="flex items-start gap-2.5">
-              <div class="p-1.5 rounded-lg bg-white/5 border border-white/8 mt-0.5">
-                <i data-lucide="bar-chart-3" class="w-4 h-4 text-tealAccent"></i>
-              </div>
-              <div>
-                <span class="text-[9px] text-textMuted uppercase font-bold tracking-wider block">States Monitored</span>
-                <span class="text-base font-black text-textWhite block font-mono mt-0.5">36</span>
-              </div>
-            </div>
-            <div class="flex items-start gap-2.5">
-              <div class="p-1.5 rounded-lg bg-white/5 border border-white/8 mt-0.5">
-                <i data-lucide="shield-alert" class="w-4 h-4 text-saffronAccent"></i>
-              </div>
-              <div>
-                <span class="text-[9px] text-textMuted uppercase font-bold tracking-wider block">High-Risk Regions</span>
-                <span class="text-base font-black text-textWhite block font-mono mt-0.5">8</span>
-              </div>
-            </div>
-            <div class="flex items-start gap-2.5">
-              <div class="p-1.5 rounded-lg bg-white/5 border border-white/8 mt-0.5">
-                <i data-lucide="calendar" class="w-4 h-4 text-tealAccent"></i>
-              </div>
-              <div>
-                <span class="text-[9px] text-textMuted uppercase font-bold tracking-wider block">Forecast Window</span>
-                <span class="text-base font-black text-textWhite block font-mono mt-0.5">72 Hours</span>
-              </div>
-            </div>
-            <div class="flex items-start gap-2.5">
-              <div class="p-1.5 rounded-lg bg-white/5 border border-white/8 mt-0.5">
-                <i data-lucide="refresh-cw" class="w-4 h-4 text-textWhite"></i>
-              </div>
-              <div>
-                <span class="text-[9px] text-textMuted uppercase font-bold tracking-wider block">Telemetry Sync</span>
-                <span class="text-base font-black text-textWhite block font-mono mt-0.5">Every 3h</span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Right Side: Selectors, Details Cards -->
-        <div id="risk-map" class="lg:col-span-5 xl:col-span-4 flex flex-col gap-6 scroll-mt-20">
-          
-          <!-- Dropdowns selectors card -->
-          <div class="glass-panel p-5 border border-white/12 flex flex-col gap-4">
-            <div class="flex justify-between items-center border-b border-white/5 pb-2">
-              <span class="text-[10px] text-textMuted uppercase font-bold tracking-wider">Select State & Filter</span>
-              <span class="text-[9px] px-2 py-0.5 rounded-full bg-tealAccent/15 border border-tealAccent/20 text-tealAccent font-bold">ACTIVE</span>
-            </div>
-            
-            <div class="flex flex-col gap-3">
-              <div>
-                <label class="text-[9px] text-textMuted uppercase font-bold tracking-wider block mb-1">Select a State</label>
-                <div class="relative">
-                  <select id="state-select-dropdown" onchange="onStateDropdownSelect(this.value)" class="w-full h-10 pl-3 pr-8 rounded-full border border-white/10 bg-white/5 text-textWhite text-xs focus:outline-none focus:border-tealAccent/50 appearance-none">
-                    <!-- Loaded dynamically -->
-                  </select>
-                  <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-textMuted">
-                    <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
-                  </div>
+    <!-- Emergency Alert Banner -->
+    <div id="alert-banner" class="fixed top-0 left-0 w-full z-[1000] px-6 pt-4">
+        <div class="max-w-[1440px] mx-auto glass-card !bg-red-500/10 !border-red-500/30 px-6 py-3.5 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shrink-0" style="box-shadow: 0 0 8px #ef4444"></span>
+                <div class="text-xs">
+                    <span class="font-bold text-[#F5F7FB] uppercase tracking-wider">Critical Warning Threshold Breached</span>
+                    <span class="text-[#A7B6CC] hidden sm:inline"> — automated evacuation advisory recommended for marked active slope sectors.</span>
                 </div>
-              </div>
-
-              <div>
-                <label class="text-[9px] text-textMuted uppercase font-bold tracking-wider block mb-1">Region</label>
-                <div class="relative">
-                  <select id="region-select-dropdown" onchange="onRegionSelect(this.value)" class="w-full h-10 pl-3 pr-8 rounded-full border border-white/10 bg-white/5 text-textWhite text-xs focus:outline-none focus:border-tealAccent/50 appearance-none">
-                    <option value="All India">All India</option>
-                    <option value="North-East India">North-East Region</option>
-                    <option value="Himalayan Region">Himalayan states</option>
-                  </select>
-                  <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-textMuted">
-                    <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
-                  </div>
-                </div>
-              </div>
             </div>
-
-            <!-- Quick Select grid -->
-            <div>
-              <span class="text-[9px] text-textMuted uppercase font-bold tracking-wider block mb-2">North-Eastern Quick Selection</span>
-              <div id="ne-quick-select-grid" class="flex flex-wrap gap-1.5">
-                <!-- Buttons rendered dynamically -->
-              </div>
-            </div>
-          </div>
-
-          <!-- Dual details panels cards -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-5 w-full">
-            
-            <!-- State Profile Details -->
-            <div id="selected-state-details-card" class="glass-panel p-5 flex flex-col gap-4 border border-white/12 justify-between">
-              <div>
-                <span class="text-[10px] text-textMuted uppercase font-bold tracking-widest block">Selected State Risk Profile</span>
-                <h2 id="card-state-name" class="text-2xl font-black text-textWhite tracking-tight mt-1 uppercase">Meghalaya</h2>
-                <span id="card-state-region" class="text-[10px] text-textMuted font-medium block mt-0.5">North-Eastern Region</span>
-                
-                <div class="flex items-baseline gap-2 mt-4">
-                  <span id="card-state-risk-pct" class="text-4xl font-black font-mono text-riskHigh">78%</span>
-                  <div class="flex flex-col">
-                    <span id="card-state-risk-label" class="text-xs font-black uppercase tracking-wide text-riskHigh">High Risk</span>
-                    <span class="text-[10px] text-textMuted flex items-center gap-1 mt-0.5">
-                      <i id="card-state-trend-icon" data-lucide="trending-up" class="w-3.5 h-3.5 text-riskVeryHigh"></i>
-                      <span id="card-state-trend-label" class="capitalize">Rising Trend</span>
-                    </span>
-                  </div>
-                </div>
-
-                <div class="flex items-center gap-1.5 text-[10px] text-tealAccent font-semibold mt-3">
-                  <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
-                  <span>Forecast Valid for next 72 hours</span>
-                </div>
-
-                <!-- Warning advisory box -->
-                <div id="card-state-advisory-box" class="mt-4 p-3 rounded-xl border text-[11px] leading-relaxed flex gap-2 border-riskHigh/20 bg-riskHigh/5">
-                  <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 mt-0.5 text-riskHigh"></i>
-                  <p id="card-state-advisory-text" class="font-medium text-textWhite">High landslide risk expected. Prep responders.</p>
-                </div>
-              </div>
-
-              <div class="flex justify-between items-center text-[9px] text-textMuted pt-2 border-t border-white/5 mt-auto">
-                <span class="flex items-center gap-1">
-                  <i data-lucide="clock" class="w-3 h-3"></i>
-                  Updated <span id="card-state-sync-label">2 min ago</span>
-                </span>
-              </div>
-            </div>
-
-            <!-- Risk Score Gauge -->
-            <div id="selected-state-gauge-card" class="glass-panel p-5 flex flex-col justify-between border border-white/12 gap-4">
-              <div>
-                <span class="text-[10px] text-textMuted uppercase font-bold tracking-widest block">Risk Score</span>
-                
-                <div class="flex flex-row items-center justify-between gap-4 mt-3">
-                  <!-- Circular progress -->
-                  <div class="relative flex items-center justify-center w-28 h-28 shrink-0">
-                    <svg class="w-28 h-28 transform -rotate-90">
-                      <circle cx="56" cy="56" r="50" stroke="rgba(255, 255, 255, 0.05)" stroke-width="10" fill="transparent" />
-                      <circle id="gauge-progress-circle" cx="56" cy="56" r="50" stroke="#FF9F43" stroke-width="10" fill="transparent" stroke-dasharray="314.16" stroke-dashoffset="69.1" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
-                    </svg>
-                    <div class="absolute flex flex-col items-center justify-center">
-                      <span id="gauge-risk-pct" class="text-xl font-black text-textWhite font-mono leading-none">78%</span>
-                      <span class="text-[8px] text-textMuted uppercase font-bold tracking-wider mt-0.5">Index</span>
-                    </div>
-                  </div>
-
-                  <!-- Risk drivers list -->
-                  <div class="flex-1 flex flex-col gap-2">
-                    <span class="text-[9px] text-textMuted uppercase font-bold tracking-wider block">Primary Drivers</span>
-                    <div class="flex flex-col gap-1.5">
-                      <div class="flex items-center gap-2 text-[10px] text-textWhite">
-                        <i data-lucide="cloud-rain" class="w-3.5 h-3.5 text-tealAccent"></i>
-                        <span class="font-semibold">Rainfall</span>
-                      </div>
-                      <div class="flex items-center gap-2 text-[10px] text-textWhite">
-                        <i data-lucide="droplets" class="w-3.5 h-3.5 text-riskLow"></i>
-                        <span class="font-semibold">Soil Moisture</span>
-                      </div>
-                      <div class="flex items-center gap-2 text-[10px] text-textWhite">
-                        <i data-lucide="triangle" class="w-3.5 h-3.5 text-saffronAccent"></i>
-                        <span class="font-semibold">Slope Angle</span>
-                      </div>
-                      <div class="flex items-center gap-2 text-[10px] text-textWhite">
-                        <i data-lucide="activity" class="w-3.5 h-3.5 text-riskVeryHigh"></i>
-                        <span class="font-semibold">Recent Vibration</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex justify-between items-center text-[10px] pt-2 border-t border-white/5 mt-auto">
-                <button onclick="toggleModal(true)" class="text-left text-xs font-bold text-tealAccent hover:underline flex items-center gap-1">
-                  How is this calculated?
-                </button>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      <!-- 3. PARAMETER FEED GRID -->
-      <div class="flex flex-col gap-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h3 class="text-lg font-semibold tracking-wide text-textWhite">Telemetry & Terrain Parameter Feed</h3>
-            <p class="text-xs text-textMuted mt-0.5">Real-time localized geotechnical sensor array readings</p>
-          </div>
-          
-          <!-- Simulation Mode Trigger Switch -->
-          <div class="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 self-start">
-            <i data-lucide="sliders" class="w-3.5 h-3.5 text-tealAccent"></i>
-            <span class="text-[9px] text-textMuted uppercase font-bold tracking-wider">Simulation Sandbox</span>
-            <button onclick="toggleSimulationMode()" id="simulation-toggle-btn" class="w-10 h-5 rounded-full bg-white/10 relative p-0.5 transition-colors duration-200" title="Enable slider simulation mode">
-              <span id="simulation-toggle-dot" class="absolute w-4 h-4 rounded-full bg-textMuted left-0.5 top-0.5 transition-all"></span>
+            <button onclick="dismissBanner()" class="text-[9px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 transition shrink-0">
+                Dismiss
             </button>
-          </div>
         </div>
-
-        <div id="parameters-feed-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-          <!-- Rendered dynamically -->
-        </div>
-      </div>
-
-      <!-- 4. ANALYTICS CHARTS SECTION -->
-      <div>
-        <div class="mb-4">
-          <h3 class="text-lg font-semibold tracking-wide text-textWhite">Analytics Dashboard — <span id="charts-state-name">Meghalaya</span></h3>
-          <p class="text-xs text-textMuted mt-0.5">Statistical forecast graphs and parameter weights</p>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="glass-panel p-5 border border-white/12 flex flex-col justify-between">
-            <span class="text-[10px] text-textMuted uppercase font-bold tracking-widest block mb-4">72-Hour Rainfall Forecast</span>
-            <div class="relative w-full h-[220px]">
-              <canvas id="chart-rainfall"></canvas>
-            </div>
-          </div>
-          
-          <div class="glass-panel p-5 border border-white/12 flex flex-col justify-between">
-            <span class="text-[10px] text-textMuted uppercase font-bold tracking-widest block mb-4">Risk Parameter Contribution</span>
-            <div class="relative w-full h-[220px]">
-              <canvas id="chart-contribution"></canvas>
-            </div>
-          </div>
-          
-          <div class="glass-panel p-5 border border-white/12 flex flex-col justify-between">
-            <span class="text-[10px] text-textMuted uppercase font-bold tracking-widest block mb-4">Recent Risk Trend (7 Days)</span>
-            <div class="relative w-full h-[220px]">
-              <canvas id="chart-trend"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 5. ALERTS & Vulnerability Table -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 scroll-mt-20">
-        
-        <!-- Live Alerts -->
-        <div id="alerts" class="lg:col-span-5 xl:col-span-6 h-full">
-          <div class="glass-panel p-5 border border-white/12 flex flex-col gap-4 h-full">
-            <div class="flex justify-between items-center border-b border-white/5 pb-2">
-              <div class="flex items-center gap-2">
-                <i data-lucide="bell" class="w-4 h-4 text-saffronAccent animate-bounce"></i>
-                <h3 class="text-sm font-bold text-textWhite uppercase tracking-wide">Live Early Warnings Feed</h3>
-              </div>
-              <span class="text-[9px] px-2 py-0.5 rounded-full bg-riskVeryHigh/20 border border-riskVeryHigh/30 text-riskVeryHigh font-bold uppercase tracking-wider animate-pulse">Live</span>
-            </div>
-            
-            <div id="alerts-stream-list" class="flex flex-col gap-4 overflow-y-auto max-h-[360px] pr-2">
-              <!-- Rendered dynamically -->
-            </div>
-          </div>
-        </div>
-
-        <!-- Vulnerable Districts -->
-        <div class="lg:col-span-7 xl:col-span-6 h-full">
-          <div class="glass-panel p-5 border border-white/12 flex flex-col gap-4 h-full">
-            <div class="flex justify-between items-center border-b border-white/5 pb-2">
-              <div class="flex items-center gap-2">
-                <i data-lucide="bar-chart-2" class="w-4 h-4 text-tealAccent"></i>
-                <h3 class="text-sm font-bold text-textWhite uppercase tracking-wide">Most Vulnerable Districts</h3>
-              </div>
-              <span class="text-[9px] text-textMuted uppercase font-bold tracking-wider">Ranked Risk</span>
-            </div>
-
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr class="border-b border-white/5 text-textMuted">
-                    <th class="py-2.5 font-bold uppercase text-[9px]">Rank</th>
-                    <th class="py-2.5 font-bold uppercase text-[9px]">District</th>
-                    <th class="py-2.5 font-bold uppercase text-[9px]">State</th>
-                    <th class="py-2.5 font-bold uppercase text-[9px] text-right">Risk Score</th>
-                    <th class="py-2.5 font-bold uppercase text-[9px] text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody id="districts-table-body" class="text-textWhite font-medium">
-                  <!-- Rendered dynamically -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- 6. BOTTOM METHODOLOGY BAR -->
-      <div id="methodology" class="scroll-mt-20">
-        <div class="glass-panel p-5 flex flex-col lg:flex-row gap-6 lg:items-center justify-between border border-white/12">
-          
-          <div class="max-w-xs shrink-0 flex flex-col gap-1">
-            <h3 class="text-base font-black text-textWhite tracking-tight uppercase">How Bhoomi Rakshak Works</h3>
-            <p class="text-[11px] text-textMuted leading-relaxed">
-              Bhoomi Rakshak combines environmental, geological, historical, and sensor data to forecast landslide probability for the next 72 hours.
-            </p>
-          </div>
-
-          <div class="flex-1 flex flex-col md:flex-row flex-wrap lg:flex-nowrap gap-4 items-stretch">
-            <div class="flex-1 min-w-[200px] flex gap-3 p-3.5 rounded-xl border border-white/8 bg-white/3">
-              <div class="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center border text-tealAccent bg-tealAccent/10 border-tealAccent/20 mt-0.5">
-                <i data-lucide="database" class="w-4 h-4"></i>
-              </div>
-              <div class="flex flex-col gap-0.5">
-                <div class="flex items-center gap-1.5">
-                  <span class="font-mono text-[10px] text-textMuted font-bold">01</span>
-                  <h4 class="text-xs font-black text-textWhite uppercase">Collect</h4>
-                </div>
-                <p class="text-[10px] text-textMuted">Rainfall, soil, terrain, seismic, and sensor data</p>
-              </div>
-            </div>
-
-            <div class="flex-1 min-w-[200px] flex gap-3 p-3.5 rounded-xl border border-white/8 bg-white/3">
-              <div class="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center border text-saffronAccent bg-saffronAccent/10 border-saffronAccent/20 mt-0.5">
-                <i data-lucide="line-chart" class="w-4 h-4"></i>
-              </div>
-              <div class="flex flex-col gap-0.5">
-                <div class="flex items-center gap-1.5">
-                  <span class="font-mono text-[10px] text-textMuted font-bold">02</span>
-                  <h4 class="text-xs font-black text-textWhite uppercase">Analyze</h4>
-                </div>
-                <p class="text-[10px] text-textMuted">Feature engineering and risk parameter analysis</p>
-              </div>
-            </div>
-
-            <div class="flex-1 min-w-[200px] flex gap-3 p-3.5 rounded-xl border border-white/8 bg-white/3">
-              <div class="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center border text-tealAccent bg-tealAccent/10 border-tealAccent/20 mt-0.5">
-                <i data-lucide="cpu" class="w-4 h-4"></i>
-              </div>
-              <div class="flex flex-col gap-0.5">
-                <div class="flex items-center gap-1.5">
-                  <span class="font-mono text-[10px] text-textMuted font-bold">03</span>
-                  <h4 class="text-xs font-black text-textWhite uppercase">Predict</h4>
-                </div>
-                <p class="text-[10px] text-textMuted">Machine-learning model estimates landslide probability</p>
-              </div>
-            </div>
-
-            <div class="flex-1 min-w-[200px] flex gap-3 p-3.5 rounded-xl border border-white/8 bg-white/3">
-              <div class="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center border text-riskVeryHigh bg-riskVeryHigh/10 border-riskVeryHigh/20 mt-0.5">
-                <i data-lucide="bell" class="w-4 h-4"></i>
-              </div>
-              <div class="flex flex-col gap-0.5">
-                <div class="flex items-center gap-1.5">
-                  <span class="font-mono text-[10px] text-textMuted font-bold">04</span>
-                  <h4 class="text-xs font-black text-textWhite uppercase">Alert</h4>
-                </div>
-                <p class="text-[10px] text-textMuted">Authorities and communities receive risk-based warnings</p>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-    </main>
-
-    <!-- Footer -->
-    <footer id="footer" class="border-t border-white/10 bg-bgDark py-10 mt-12 text-xs">
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-8">
-        
-        <div class="flex flex-col md:flex-row justify-between items-start gap-8">
-          <div class="flex flex-col gap-2">
-            <div class="flex items-center gap-2">
-              <div class="w-6 h-6 rounded bg-tealAccent/20 flex items-center justify-center border border-tealAccent/30 text-tealAccent">
-                <i data-lucide="mountain" class="w-3.5 h-3.5"></i>
-              </div>
-              <span class="text-sm font-extrabold uppercase tracking-wide text-textWhite">Bhoomi Rakshak</span>
-            </div>
-            <p class="text-[10px] text-textMuted max-w-xs leading-relaxed">
-              An AI-Powered 72-Hour Landslide Prediction and Early-Warning System designed to protect lives across hilly terrains.
-            </p>
-          </div>
-
-          <div class="flex flex-wrap gap-12">
-            <div class="flex flex-col gap-3">
-              <span class="text-[9px] uppercase font-bold tracking-widest text-textWhite">Quick Navigation</span>
-              <div class="flex flex-col gap-2 font-medium text-textMuted">
-                <button onclick="scrollToSection('dashboard')" class="hover:text-tealAccent text-left">Dashboard</button>
-                <button onclick="scrollToSection('risk-map')" class="hover:text-tealAccent text-left">Risk Map</button>
-                <button onclick="scrollToSection('alerts')" class="hover:text-tealAccent text-left">Alerts Feed</button>
-                <button onclick="scrollToSection('methodology')" class="hover:text-tealAccent text-left">Methodology</button>
-              </div>
-            </div>
-            <div class="flex flex-col gap-3">
-              <span class="text-[9px] uppercase font-bold tracking-widest text-textWhite">Telemetry APIs</span>
-              <div class="flex flex-col gap-2 font-medium text-textMuted">
-                <a href="#" class="hover:text-tealAccent">Sensor Data stream</a>
-                <a href="#" class="hover:text-tealAccent">Static CSV Dataset</a>
-                <a href="#" class="hover:text-tealAccent">LightGBM Endpoint</a>
-              </div>
-            </div>
-            <div class="flex flex-col gap-3">
-              <span class="text-[9px] uppercase font-bold tracking-widest text-textWhite">Research Partner</span>
-              <div class="flex flex-col gap-2 font-medium text-textMuted">
-                <span class="text-textWhite">Smart India Hackathon</span>
-                <span>Team Bhoomi Rakshak</span>
-                <span>© 2026 Climate Tech Labs</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="border-t border-white/5 pt-6 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-textMuted font-medium">
-          <p>
-            <strong>Decision Support Disclaimer:</strong> Predictions generated by the Bhoomi Rakshak ML classifier are experimental probabilities based on real-time environmental sensors. Always cross-verify warnings with official IMD and GSI advisory bulletins.
-          </p>
-          <span class="shrink-0 text-textWhite font-mono">© 2026 Bhoomi Rakshak. Research Prototype.</span>
-        </div>
-
-      </div>
-    </footer>
-
-  </div>
-
-  <!-- 7. METHODOLOGY MODAL -->
-  <div id="calculation-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-bgDark/85 backdrop-blur-sm hidden">
-    <div class="glass-panel border-white/20 w-full max-w-lg p-6 relative flex flex-col shadow-2xl">
-      <button onclick="toggleModal(false)" class="absolute top-4 right-4 text-textMuted hover:text-textWhite">
-        <i data-lucide="x" class="w-5 h-5"></i>
-      </button>
-
-      <div class="flex items-center gap-3 border-b border-white/10 pb-4 mb-4">
-        <div class="p-2 rounded-xl bg-tealAccent/15 border border-tealAccent/20 text-tealAccent">
-          <i data-lucide="brain" class="w-5 h-5"></i>
-        </div>
-        <div>
-          <h3 class="text-lg font-bold text-textWhite">Landslide Risk Calculation</h3>
-          <p class="text-xs text-textMuted">Bhoomi Rakshak ML Prediction Pipeline v2.0</p>
-        </div>
-      </div>
-
-      <div class="flex flex-col gap-4 text-xs text-textMuted leading-relaxed">
-        <p>
-          The overall landslide probability is computed dynamically using a localized **Gradient Boosted Decision Tree (GBDT)** model combined with physics-based slope safety factor calculations.
-        </p>
-
-        <div class="flex flex-col gap-2 mt-2">
-          <span class="text-[10px] uppercase font-bold text-textWhite tracking-wider block">Model Feature Weights Configuration</span>
-          
-          <div class="flex gap-3 p-2.5 rounded-lg bg-white/5 border border-white/8">
-            <i data-lucide="cloud-rain" class="w-4 h-4 text-tealAccent mt-0.5 shrink-0"></i>
-            <div>
-              <span class="font-semibold text-textWhite block">Rainfall Indicators (35%)</span>
-              <span class="text-[10px] mt-0.5 block">Precipitation intensity, 24-hour weight, 7-day accumulation, and 72-hour forecast.</span>
-            </div>
-          </div>
-
-          <div class="flex gap-3 p-2.5 rounded-lg bg-white/5 border border-white/8">
-            <i data-lucide="droplets" class="w-4 h-4 text-tealAccent mt-0.5 shrink-0"></i>
-            <div>
-              <span class="font-semibold text-textWhite block">Soil & Terrain Saturation (25%)</span>
-              <span class="text-[10px] mt-0.5 block">Telemetry sensor soil moisture %, clay depth profiles, and drainage flow densities.</span>
-            </div>
-          </div>
-
-          <div class="flex gap-3 p-2.5 rounded-lg bg-white/5 border border-white/8">
-            <i data-lucide="compass" class="w-4 h-4 text-tealAccent mt-0.5 shrink-0"></i>
-            <div>
-              <span class="font-semibold text-textWhite block">Slope Topography (20%)</span>
-              <span class="text-[10px] mt-0.5 block">Physics-based shear stress calculations matching slope angle and local elevations.</span>
-            </div>
-          </div>
-
-          <div class="flex gap-3 p-2.5 rounded-lg bg-white/5 border border-white/8">
-            <i data-lucide="alert-triangle" class="w-4 h-4 text-tealAccent mt-0.5 shrink-0"></i>
-            <div>
-              <span class="font-semibold text-textWhite block">Seismic Telemetry & Historical (20%)</span>
-              <span class="text-[10px] mt-0.5 block">Real-time telemetry geophone sensor micro-vibrations and previous slide incidents.</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-3 p-3 rounded-lg border border-tealAccent/20 bg-tealAccent/5 flex gap-2">
-          <i data-lucide="info" class="w-4 h-4 text-tealAccent shrink-0 mt-0.5"></i>
-          <p class="text-[10px] text-tealAccent leading-normal">
-            <strong>Prediction Confidence:</strong> The model currently reports a 94.2% Area Under Curve (AUC) score based on testing against 800+ historical landslide events.
-          </p>
-        </div>
-      </div>
     </div>
-  </div>
 
-  <!-- TOAST NOTIFICATIONS CONTAINER -->
-  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+    <div class="w-full max-w-[1440px] glass-card p-8 space-y-8 relative z-10 border border-white/5">
 
-  <!-- Vanilla JS Interactive logic -->
-  <script src="script.js"></script>
+        <header class="flex flex-wrap justify-between items-center gap-6 border-b border-white/5 pb-6">
+            <div class="flex items-center gap-3.5">
+                <div class="relative flex items-center justify-center w-10 h-10 rounded-lg bg-[#08264A] border border-[#29A9FF]/20 text-[#29A9FF]">
+                    ⛰️
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-widest text-[#F5F7FB] uppercase block leading-none">Bhoomi Rakshak</h1>
+                    <p class="text-[9px] text-[#71839C] font-bold tracking-wider uppercase block mt-1">Landslide Risk Simulator - India Region</p>
+                </div>
+            </div>
+
+            <div class="text-center hidden md:block select-none">
+                <div id="live-time" class="text-3xl font-extralight tracking-tight font-mono text-[#F5F7FB] leading-none">14:32</div>
+                <div id="live-date" class="text-[9px] text-[#71839C] uppercase font-bold tracking-widest mt-1.5 leading-none">28 Aug 2026</div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <span id="model-status" class="text-[9px] font-bold uppercase tracking-wider bg-emerald-500/10 border border-emerald-400/20 text-[#32D583] px-3.5 py-1.5 rounded-full flex items-center gap-2">
+                    <span class="w-2 h-2 bg-[#32D583] rounded-full animate-ping"></span> Live ML Model Active
+                </span>
+                <div class="w-8 h-8 rounded-full bg-[#08264A] border border-white/5 flex items-center justify-center font-bold text-xs text-[#A7B6CC] select-none">
+                    BR
+                </div>
+            </div>
+        </header>
+
+        <!-- ============ CONTROLS TOGGLE ============ -->
+        <div class="flex items-center justify-between">
+            <button id="toggle-controls" onclick="toggleControlPanel()" class="glass-pill px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 hover:bg-white/5 transition">
+                <span class="control-toggle-btn inline-block" id="toggle-icon">▼</span> Simulation Dashboard Controls
+            </button>
+            <div class="text-[10px] text-[#71839C] uppercase font-bold tracking-wider">
+                Active Node: <span id="active-site-label" class="text-[#29A9FF] font-black font-mono">Wayanad, KL</span>
+            </div>
+        </div>
+
+        <!-- ============ CONTROL PANEL SLIDERS ============ -->
+        <div id="control-panel" class="glass-pill rounded-2xl p-6 border border-white/5 bg-[#06152B]/40">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+
+                <div>
+                    <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider mb-2">
+                        <label for="rain-slider" class="text-[#A7B6CC]">24h Rainfall</label>
+                        <span id="rain-value" class="font-mono text-[#55C7FF]">120.5 mm</span>
+                    </div>
+                    <input type="range" id="rain-slider" min="0" max="300" step="0.5" value="120.5">
+                </div>
+
+                <div>
+                    <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider mb-2">
+                        <label for="moisture-slider" class="text-[#A7B6CC]">Soil Moisture</label>
+                        <span id="moisture-value" class="font-mono text-[#55C7FF]">82.0%</span>
+                    </div>
+                    <input type="range" id="moisture-slider" min="0" max="100" step="0.5" value="82">
+                </div>
+
+                <div>
+                    <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider mb-2">
+                        <label for="slope-slider" class="text-[#A7B6CC]">Slope Angle</label>
+                        <span id="slope-value" class="font-mono text-[#55C7FF]">28.5°</span>
+                    </div>
+                    <input type="range" id="slope-slider" min="0" max="60" step="0.5" value="28.5">
+                </div>
+
+                <div>
+                    <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider mb-2">
+                        <label for="vibration-slider" class="text-[#A7B6CC]">Micro-vibrations</label>
+                        <span id="vibration-value" class="font-mono text-[#55C7FF]">1.8 mm/s</span>
+                    </div>
+                    <input type="range" id="vibration-slider" min="0" max="10" step="0.1" value="1.8">
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-4 mt-6 pt-5 border-t border-white/5">
+                <button onclick="simulateExtremeMonsoon()" class="text-[10px] font-bold uppercase tracking-wider px-4 py-2.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-300 hover:bg-red-500/20 transition">
+                    ⛈️ Simulate Monsoon Collapse
+                </button>
+                <button onclick="resetToLiveData()" class="text-[10px] font-bold uppercase tracking-wider px-4 py-2.5 rounded-full bg-blue-500/10 border border-blue-400/20 text-[#55C7FF] hover:bg-blue-500/20 transition">
+                    ↺ Reset Node Constants
+                </button>
+                <button onclick="triggerEvacuationAlert()" class="text-[10px] font-bold uppercase tracking-wider px-4 py-2.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 hover:bg-amber-500/20 transition ml-auto">
+                    🚨 Manually Alert Evacuation
+                </button>
+            </div>
+            <div id="sim-status" class="text-[10px] font-mono text-[#71839C] mt-3 h-4"></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+
+            {/* Left Headline Readouts */}
+            <div class="lg:col-span-4 flex flex-col justify-between space-y-6">
+                <div>
+                    <div id="warning-pill" class="inline-block px-3 py-1 text-[9px] font-bold uppercase tracking-widest bg-red-500/10 text-red-300 border border-red-500/20 rounded-full mb-4">
+                        ⚠️ Active Warning
+                    </div>
+                    <h2 id="headline-text" class="text-3xl md:text-4xl font-extrabold text-[#F5F7FB] leading-tight uppercase tracking-tight">
+                        Critical: High Landslide Probability
+                    </h2>
+                    <p id="headline-sub" class="mt-4 text-xs text-[#A7B6CC] leading-relaxed">
+                        Heavy preceding rainfall (48h) and saturated soil conditions. Active micro-vibrations detected in high-risk slope zones.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3.5 pt-4 border-t border-white/5">
+                    <div class="glass-pill p-3.5 rounded-xl text-center flex flex-col justify-between h-20">
+                        <span class="text-[9px] text-[#A7B6CC] font-bold uppercase tracking-wider block">Moisture</span>
+                        <div id="metric-moisture" class="text-base font-bold text-[#F5F7FB] font-mono mt-1">78.5%</div>
+                        <div class="w-full bg-white/5 h-1 rounded-full overflow-hidden mt-1.5">
+                            <div id="metric-moisture-bar" class="bg-[#29A9FF] h-full transition-all duration-500" style="width: 78.5%"></div>
+                        </div>
+                    </div>
+
+                    <div class="glass-pill p-3.5 rounded-xl text-center flex flex-col justify-between h-20">
+                        <span class="text-[9px] text-[#A7B6CC] font-bold uppercase tracking-wider block">Displacement</span>
+                        <div id="metric-displacement" class="text-base font-bold text-[#F5F7FB] font-mono mt-1">2.5 mm/h</div>
+                        <div class="w-full bg-white/5 h-1 rounded-full overflow-hidden mt-1.5">
+                            <div id="metric-displacement-bar" class="bg-[#F5C451] h-full transition-all duration-500" style="width: 65%"></div>
+                        </div>
+                    </div>
+
+                    <div class="glass-pill p-3.5 rounded-xl text-center flex flex-col justify-between h-20">
+                        <span class="text-[9px] text-[#A7B6CC] font-bold uppercase tracking-wider block">Vibration</span>
+                        <div id="metric-vibration" class="text-base font-bold text-[#F5F7FB] font-mono mt-1">1.8 mm/s</div>
+                        <div class="w-full bg-white/5 h-1 rounded-full overflow-hidden mt-1.5">
+                            <div id="metric-vibration-bar" class="bg-[#FF4D5A] h-full transition-all duration-500" style="width: 85%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Center Map Box */}
+            <div class="lg:col-span-5 h-[340px] glass-card p-1.5 relative border border-white/5">
+                <div id="map"></div>
+                <div class="absolute bottom-4 left-4 z-[400] glass-pill rounded-lg px-3 py-1.5 text-[8px] font-bold uppercase tracking-wider text-[#A7B6CC]">
+                    🔴 Critical &nbsp; 🟠 High/Moderate &nbsp; 🟢 Low Risk
+                </div>
+            </div>
+
+            {/* Right Gauge */}
+            <div class="lg:col-span-3 flex flex-col justify-between space-y-6">
+
+                <div class="glass-pill p-6 rounded-2xl text-center relative border border-white/5 bg-[#06152B]/40 h-52 flex flex-col justify-between">
+                    <span class="text-[9px] text-[#71839C] uppercase font-bold tracking-widest block">Landslide Risk Score</span>
+                    <div id="risk-score-text" class="text-4xl font-extrabold font-mono mt-1" style="color: var(--risk-color)">85%</div>
+
+                    <svg id="gauge-svg" viewBox="0 0 140 80" class="w-32 h-16 mx-auto mt-2">
+                        <path d="M 12 72 A 58 58 0 0 1 128 72" fill="none" stroke="rgba(255,255,255,0.02)" stroke-width="8" stroke-linecap="round"/>
+                        <path id="gauge-arc" d="M 12 72 A 58 58 0 0 1 128 72" fill="none" stroke="#FF4D5A" stroke-width="8" stroke-linecap="round"
+                              stroke-dasharray="182.2" stroke-dashoffset="27.3" style="transition: stroke-dashoffset 0.6s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.6s ease;"/>
+                    </svg>
+                    <div id="risk-level-text" class="text-[9px] text-red-300 font-bold uppercase tracking-wider mt-1">Risk Level: Critical (Active Movement)</div>
+                </div>
+
+                {/* Nodes List */}
+                <div class="glass-pill p-4 rounded-xl flex-1 flex flex-col gap-2.5 overflow-y-auto max-h-[120px] custom-scrollbar border border-white/5" id="site-list">
+                    <!-- populated by JS -->
+                </div>
+
+            </div>
+
+        </div>
+
+        {/* Charts Container */}
+        <div class="glass-pill p-6 rounded-2xl border border-white/5 bg-[#06152B]/40">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <span class="text-[9px] text-[#71839C] uppercase font-bold tracking-widest block">Telemetry History</span>
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-[#A7B6CC] mt-0.5">Precipitation vs. Ground Displacement</h3>
+                </div>
+                <div class="text-[10px] font-mono text-[#71839C]">Updated <span id="chart-updated">just now</span></div>
+            </div>
+            <div class="h-[220px] w-full">
+                <canvas id="riskChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================================
+        // Ambient rain particles
+        // ============================================================
+        (function initRain() {
+            const container = document.getElementById('weather-fx');
+            const dropCount = window.innerWidth < 640 ? 15 : 30;
+            for (let i = 0; i < dropCount; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'rain-drop';
+                drop.style.left = Math.random() * 100 + 'vw';
+                drop.style.animationDuration = (0.7 + Math.random() * 0.9) + 's';
+                drop.style.animationDelay = (Math.random() * 3) + 's';
+                drop.style.opacity = (0.15 + Math.random() * 0.35).toFixed(2);
+                container.appendChild(drop);
+            }
+        })();
+
+        // ============================================================
+        // Real-Time Clock
+        // ============================================================
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('live-time').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            document.getElementById('live-date').innerText = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase();
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // ============================================================
+        // Extended Site lists (Including North-East states focus)
+        // ============================================================
+        const sites = [
+            { name: "Wayanad", state: "KL", lat: 11.6854, lon: 76.1320, risk: 85, rain: 120.5, moisture: 82.0, slope: 28.5, vibration: 1.8, elevation: 2100, contact: "1077 (KL SDMA)" },
+            { name: "Kedarnath", state: "UT", lat: 30.7346, lon: 79.0669, risk: 62, rain: 85.0, moisture: 58.0, slope: 34.0, vibration: 1.2, elevation: 3583, contact: "1070 (UT SDMA)" },
+            { name: "Shimla", state: "HP", lat: 31.1048, lon: 77.1734, risk: 18, rain: 20.0, moisture: 25.0, slope: 18.0, vibration: 0.5, elevation: 2276, contact: "1070 (HP SDMA)" },
+            { name: "Darjeeling", state: "WB", lat: 27.0410, lon: 88.2663, risk: 45, rain: 60.0, moisture: 48.0, slope: 24.5, vibration: 0.8, elevation: 2045, contact: "1070 (WB SDMA)" },
+            { name: "Shillong", state: "ML", lat: 25.5788, lon: 91.8933, risk: 78, rain: 160.0, moisture: 75.0, slope: 31.0, vibration: 2.1, elevation: 1525, contact: "1070 (ML SDMA)" },
+            { name: "Gangtok", state: "SK", lat: 27.3314, lon: 88.6138, risk: 52, rain: 110.0, moisture: 62.0, slope: 29.0, vibration: 1.4, elevation: 1650, contact: "1070 (SK SDMA)" }
+        ];
+
+        let activeSite = sites[0];
+
+        function riskColor(risk) {
+            if (risk >= 65) return '#FF4D5A'; // CRITICAL
+            if (risk >= 35) return '#F5C451'; // ELEVATED/WATCH
+            return '#32D583'; // LOW
+        }
+        function riskLabel(risk) {
+            if (risk >= 65) return 'CRITICAL';
+            if (risk >= 35) return 'HIGH';
+            return 'LOW';
+        }
+
+        // ============================================================
+        // Leaflet Map Configuration
+        // ============================================================
+        const map = L.map('map', { zoomControl: false }).setView([22.5000, 82.5000], 5);
+
+        // Dark premium CartoDB tiles
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap &copy; CARTO'
+        }).addTo(map);
+
+        // Heatmap weighted points
+        const heatPoints = sites.map(s => [s.lat, s.lon, s.risk / 100]);
+        const heatLayer = L.heatLayer(heatPoints, {
+            radius: 35,
+            blur: 25,
+            maxZoom: 8,
+            gradient: { 0.2: '#32D583', 0.5: '#F5C451', 0.8: '#FF4D5A' }
+        }).addTo(map);
+
+        // Pulsing indicators markers
+        const markerRefs = {};
+        function buildMarkerIcon(risk) {
+            const color = riskColor(risk);
+            const showPulse = risk >= 35;
+            return L.divIcon({
+                className: '',
+                html: `
+                    <div class="pulse-marker">
+                        ${showPulse ? `<div class="ring" style="background:${color}44;"></div>` : ''}
+                        <div class="core" style="background:${color}; border:1.5px solid #F5F7FB;"></div>
+                    </div>`,
+                iconSize: [16, 16],
+                iconAnchor: [8, 8]
+            });
+        }
+
+        function popupHtml(site) {
+            return `
+                <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 180px;">
+                    <div style="font-weight:800; font-size:12px; margin-bottom:4px; text-transform: uppercase; letter-spacing: 0.05em;">${site.name}, ${site.state}</div>
+                    <div style="font-size:10px; line-height:1.6; color: #A7B6CC;">
+                        <div>Risk Level: <b style="color:${riskColor(site.risk)}">${riskLabel(site.risk)} (${site.risk}%)</b></div>
+                        <div>Elevation: ${site.elevation} m</div>
+                        <div>Preceding Rain: ${site.rain} mm</div>
+                        <div>SDMA Hotline: <span style="color: #29A9FF">${site.contact}</span></div>
+                    </div>
+                </div>`;
+        }
+
+        sites.forEach(site => {
+            const marker = L.marker([site.lat, site.lon], { icon: buildMarkerIcon(site.risk) })
+                .addTo(map)
+                .bindPopup(popupHtml(site));
+            marker.on('click', () => {
+                selectSite(site);
+            });
+            markerRefs[site.name] = marker;
+        });
+
+        // Trigger active site selection
+        function selectSite(site) {
+            activeSite = site;
+            document.getElementById('active-site-label').innerText = `${site.name}, ${site.state}`;
+            
+            // Set slider values
+            sliders.rain.value = site.rain;
+            sliders.moisture.value = site.moisture;
+            sliders.slope.value = site.slope;
+            sliders.vibration.value = site.vibration;
+            
+            syncSliderLabels();
+            scheduleFetch(`Loaded risk node for ${site.name}, ${site.state}…`);
+            
+            // Focus center map viewport
+            map.setView([site.lat, site.lon], 7);
+        }
+
+        function refreshSiteList() {
+            const list = document.getElementById('site-list');
+            list.innerHTML = sites
+                .slice()
+                .sort((a, b) => b.risk - a.risk)
+                .map(s => {
+                    const color = riskColor(s.risk);
+                    const bg = s.risk >= 65 ? 'bg-red-500/10 border-red-500/20' : s.risk >= 35 ? 'bg-amber-500/10 border-amber-500/20' : 'bg-emerald-500/10 border-emerald-400/20';
+                    const textClass = s.risk >= 65 ? 'text-red-400' : s.risk >= 35 ? 'text-amber-400' : 'text-emerald-400';
+                    const isSelected = activeSite.name === s.name;
+                    const activeBorder = isSelected ? 'border-[#29A9FF] bg-[#29A9FF]/5' : 'border-white/5';
+                    
+                    return `<div onclick="selectSiteByName('${s.name}')" class="flex justify-between items-center p-2 rounded-lg border cursor-pointer hover:bg-white/5 transition-all text-[11px] ${bg} ${activeBorder}">
+                                <span class="font-bold">${s.name}, ${s.state}</span>
+                                <span class="font-extrabold ${textClass}">${riskLabel(s.risk)} (${s.risk}%)</span>
+                            </div>`;
+                }).join('');
+        }
+        
+        function selectSiteByName(name) {
+            const site = sites.find(s => s.name === name);
+            if (site) selectSite(site);
+        }
+
+        // ============================================================
+        // ChartJS Config
+        // ============================================================
+        const ctx = document.getElementById('riskChart').getContext('2d');
+
+        const gradientRain = ctx.createLinearGradient(0, 0, 0, 160);
+        gradientRain.addColorStop(0, 'rgba(41, 169, 255, 0.25)');
+        gradientRain.addColorStop(1, 'rgba(41, 169, 255, 0.0)');
+
+        const gradientDisp = ctx.createLinearGradient(0, 0, 0, 160);
+        gradientDisp.addColorStop(0, 'rgba(255, 77, 90, 0.25)');
+        gradientDisp.addColorStop(1, 'rgba(255, 77, 90, 0.0)');
+
+        const labels = ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00', '04:00+1', '08:00+1', '12:00+1'];
+        const rainfallSeries = [12, 19, 3, 5, 2, 30, 45, 62, 85, 70];
+        const displacementSeries = [1.0, 1.2, 1.4, 1.5, 1.6, 2.0, 2.6, 3.4, 4.1, 3.9];
+
+        const thresholdPlugin = {
+            id: 'thresholdLine',
+            afterDatasetsDraw(chart) {
+                const yScale = chart.scales['yDisp'];
+                if (!yScale) return;
+                const thresholdVal = 3.5;
+                const y = yScale.getPixelForValue(thresholdVal);
+                const { left, right } = chart.chartArea;
+                const c = chart.ctx;
+                c.save();
+                c.strokeStyle = 'rgba(255, 77, 90, 0.8)';
+                c.lineWidth = 1;
+                c.setLineDash([4, 4]);
+                c.beginPath();
+                c.moveTo(left, y);
+                c.lineTo(right, y);
+                c.stroke();
+                c.setLineDash([]);
+                c.fillStyle = 'rgba(255, 77, 90, 0.9)';
+                c.font = '10px monospace';
+                c.fillText('THRESHOLD: 3.5 mm/h', left + 8, y - 6);
+                c.restore();
+            }
+        };
+
+        const riskChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Precipitation (mm)',
+                        data: rainfallSeries,
+                        borderColor: '#29A9FF',
+                        backgroundColor: gradientRain,
+                        yAxisID: 'yRain',
+                        fill: true,
+                        tension: 0.35,
+                        borderWidth: 1.5,
+                        pointRadius: 1
+                    },
+                    {
+                        label: 'Slope Displacement (mm/h)',
+                        data: displacementSeries,
+                        borderColor: '#FF4D5A',
+                        backgroundColor: gradientDisp,
+                        yAxisID: 'yDisp',
+                        fill: true,
+                        tension: 0.35,
+                        borderWidth: 1.5,
+                        pointRadius: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: '#A7B6CC', font: { size: 10, family: 'Inter' } } }
+                },
+                scales: {
+                    x: { ticks: { color: '#71839C', font: { size: 9, family: 'monospace' } }, grid: { display: false } },
+                    yRain: {
+                        position: 'left',
+                        ticks: { color: '#29A9FF', font: { size: 9, family: 'monospace' } },
+                        grid: { color: 'rgba(255, 255, 255, 0.02)' },
+                        title: { display: true, text: 'Rainfall (mm)', color: '#29A9FF', font: { size: 9 } }
+                    },
+                    yDisp: {
+                        position: 'right',
+                        ticks: { color: '#FF4D5A', font: { size: 9, family: 'monospace' } },
+                        grid: { display: false },
+                        title: { display: true, text: 'Displacement (mm/h)', color: '#FF4D5A', font: { size: 9 } }
+                    }
+                }
+            },
+            plugins: [thresholdPlugin]
+        });
+
+        function pushLiveChartPoint(rainVal, dispVal) {
+            const now = new Date();
+            const label = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            riskChart.data.labels.push(label);
+            riskChart.data.labels.shift();
+            riskChart.data.datasets[0].data.push(rainVal);
+            riskChart.data.datasets[0].data.shift();
+            riskChart.data.datasets[1].data.push(dispVal);
+            riskChart.data.datasets[1].data.shift();
+            riskChart.update();
+            document.getElementById('chart-updated').innerText = 'just now';
+        }
+
+        // ============================================================
+        // Gauge updates
+        // ============================================================
+        const GAUGE_CIRCUMFERENCE = 182.2;
+
+        function updateGauge(riskPct) {
+            const color = riskColor(riskPct);
+            const arc = document.getElementById('gauge-arc');
+            const offset = GAUGE_CIRCUMFERENCE * (1 - riskPct / 100);
+            arc.setAttribute('stroke-dashoffset', offset);
+            arc.setAttribute('stroke', color);
+            document.getElementById('risk-score-text').style.color = color;
+            document.getElementById('risk-score-text').innerText = `${Math.round(riskPct)}%`;
+            document.documentElement.style.setProperty('--risk-color', color);
+
+            const levelEl = document.getElementById('risk-level-text');
+            const pillEl = document.getElementById('warning-pill');
+            const headline = document.getElementById('headline-text');
+            const sub = document.getElementById('headline-sub');
+
+            if (riskPct >= 65) {
+                levelEl.className = 'text-[9px] text-[#FF4D5A] font-bold uppercase tracking-wider mt-1';
+                levelEl.innerText = 'Risk Level: Critical (Active Displacement)';
+                pillEl.className = 'inline-block px-3 py-1 text-[9px] font-bold uppercase tracking-widest bg-red-500/10 text-red-300 border border-red-500/20 rounded-full mb-4';
+                pillEl.innerText = '⚠️ Active Warning';
+                headline.innerText = 'Critical: High Landslide Probability';
+                sub.innerText = 'Preceding precipitation totals and soil liquid limit have been breached. Localized shear failure warning active.';
+            } else if (riskPct >= 35) {
+                levelEl.className = 'text-[9px] text-amber-300 font-bold uppercase tracking-wider mt-1';
+                levelEl.innerText = 'Risk Level: High (Active Watch)';
+                pillEl.className = 'inline-block px-3 py-1 text-[9px] font-bold uppercase tracking-widest bg-amber-500/10 text-amber-300 border border-amber-500/20 rounded-full mb-4';
+                pillEl.innerText = '⚠️ Elevated Watch';
+                headline.innerText = 'Elevated: Moderate Landslide Probability';
+                sub.innerText = 'Rainfall saturation levels are increasing. Ground monitors reporting minor slope displacement.';
+            } else {
+                levelEl.className = 'text-[9px] text-[#32D583] font-bold uppercase tracking-wider mt-1';
+                levelEl.innerText = 'Risk Level: Low (Nominal Status)';
+                pillEl.className = 'inline-block px-3 py-1 text-[9px] font-bold uppercase tracking-widest bg-emerald-500/10 text-emerald-300 border border-emerald-400/20 rounded-full mb-4';
+                pillEl.innerText = '✅ Nominal';
+                headline.innerText = 'Stable: Low Landslide Probability';
+                sub.innerText = 'All geological parameters are within stable baseline thresholds. Normal status.';
+            }
+
+            toggleAlertBanner(riskPct >= 75);
+            
+            // Re-render list to reflect selected visual status
+            refreshSiteList();
+        }
+
+        function updateMetricCards(rain, moisture, slope, vibration, displacement) {
+            document.getElementById('metric-moisture').innerText = `${moisture.toFixed(1)}%`;
+            document.getElementById('metric-moisture-bar').style.width = `${Math.min(moisture, 100)}%`;
+
+            document.getElementById('metric-displacement').innerText = `${displacement.toFixed(1)} mm/h`;
+            document.getElementById('metric-displacement-bar').style.width = `${Math.min(displacement / 5 * 100, 100)}%`;
+
+            document.getElementById('metric-vibration').innerText = `${vibration.toFixed(1)} mm/s`;
+            document.getElementById('metric-vibration-bar').style.width = `${Math.min(vibration / 10 * 100, 100)}%`;
+        }
+
+        function toggleAlertBanner(show) {
+            const banner = document.getElementById('alert-banner');
+            if (show) banner.classList.add('show');
+            else banner.classList.remove('show');
+        }
+        function dismissBanner() {
+            document.getElementById('alert-banner').classList.remove('show');
+        }
+
+        // ============================================================
+        // Panel Collapse
+        // ============================================================
+        let panelOpen = true;
+        function toggleControlPanel() {
+            const panel = document.getElementById('control-panel');
+            const icon = document.getElementById('toggle-icon');
+            panelOpen = !panelOpen;
+            panel.classList.toggle('collapsed', !panelOpen);
+            icon.style.transform = panelOpen ? 'rotate(0deg)' : 'rotate(-90deg)';
+        }
+
+        // ============================================================
+        // ML Prediction API Server Hook (Port 8000)
+        // ============================================================
+        const sliders = {
+            rain: document.getElementById('rain-slider'),
+            moisture: document.getElementById('moisture-slider'),
+            slope: document.getElementById('slope-slider'),
+            vibration: document.getElementById('vibration-slider')
+        };
+        const valueLabels = {
+            rain: document.getElementById('rain-value'),
+            moisture: document.getElementById('moisture-value'),
+            slope: document.getElementById('slope-value'),
+            vibration: document.getElementById('vibration-value')
+        };
+
+        function currentSliderPayload() {
+            return {
+                latitude: activeSite.lat,
+                longitude: activeSite.lon,
+                rainfall_24h_mm: parseFloat(sliders.rain.value),
+                soil_moisture_pct: parseFloat(sliders.moisture.value),
+                slope_angle_deg: parseFloat(sliders.slope.value),
+                sensor_vibration_mm_s: parseFloat(sliders.vibration.value)
+            };
+        }
+
+        function syncSliderLabels() {
+            valueLabels.rain.innerText = `${parseFloat(sliders.rain.value).toFixed(1)} mm`;
+            valueLabels.moisture.innerText = `${parseFloat(sliders.moisture.value).toFixed(1)}%`;
+            valueLabels.slope.innerText = `${parseFloat(sliders.slope.value).toFixed(1)}°`;
+            valueLabels.vibration.innerText = `${parseFloat(sliders.vibration.value).toFixed(1)} mm/s`;
+        }
+
+        let debounceTimer = null;
+        function scheduleFetch(statusMsg) {
+            syncSliderLabels();
+            setSimStatus(statusMsg || 'Re-evaluating threat indexes…');
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                fetchModelPrediction(currentSliderPayload());
+            }, 250);
+        }
+
+        Object.values(sliders).forEach(s => s.addEventListener('input', () => scheduleFetch()));
+
+        function setSimStatus(msg) {
+            document.getElementById('sim-status').innerText = msg;
+        }
+
+        async function fetchModelPrediction(payload) {
+            const statusPill = document.getElementById('model-status');
+            try {
+                // Connect to local Scikit-Learn Python predict server running on port 8000
+                const response = await fetch('http://localhost:8000/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
+                const result = await response.json();
+
+                const riskPct = result.predicted_risk_percentage ?? 50;
+                const approxDisplacement = 1 + (riskPct / 100) * 4.0; 
+
+                // Update active site risk in list
+                activeSite.risk = riskPct;
+                activeSite.rain = payload.rainfall_24h_mm;
+                activeSite.moisture = payload.soil_moisture_pct;
+                activeSite.slope = payload.slope_angle_deg;
+                activeSite.vibration = payload.sensor_vibration_mm_s;
+
+                updateGauge(riskPct);
+                updateMetricCards(payload.rainfall_24h_mm, payload.soil_moisture_pct, payload.slope_angle_deg, payload.sensor_vibration_mm_s, approxDisplacement);
+                pushLiveChartPoint(payload.rainfall_24h_mm, approxDisplacement);
+
+                // Update marker color dynamically
+                const marker = markerRefs[activeSite.name];
+                if (marker) {
+                    marker.setIcon(buildMarkerIcon(riskPct));
+                    marker.setPopupContent(popupHtml(activeSite));
+                }
+
+                setSimStatus(`Update Complete — ML risk prediction: ${riskPct}% (${result.predicted_risk_level})`);
+                statusPill.className = 'text-[9px] font-bold uppercase tracking-wider bg-emerald-500/10 border border-emerald-400/20 text-[#32D583] px-3.5 py-1.5 rounded-full flex items-center gap-1.5';
+                statusPill.innerHTML = '<span class="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span> Live ML Model Active';
+
+            } catch (error) {
+                console.warn("ML Server Offline. Using fallback mock calculations...", error);
+                
+                // Fallback deterministic risk scoring model
+                const rawScore = (payload.rainfall_24h_mm / 300) * 40 + 
+                                 (payload.soil_moisture_pct / 100) * 35 + 
+                                 (payload.slope_angle_deg / 60) * 15 + 
+                                 (payload.sensor_vibration_mm_s / 10) * 10;
+                const riskPct = Math.min(Math.max(Math.round(rawScore), 0), 100);
+                const approxDisplacement = 1 + (riskPct / 100) * 4.0;
+
+                activeSite.risk = riskPct;
+
+                updateGauge(riskPct);
+                updateMetricCards(payload.rainfall_24h_mm, payload.soil_moisture_pct, payload.slope_angle_deg, payload.sensor_vibration_mm_s, approxDisplacement);
+                pushLiveChartPoint(payload.rainfall_24h_mm, approxDisplacement);
+
+                const marker = markerRefs[activeSite.name];
+                if (marker) {
+                    marker.setIcon(buildMarkerIcon(riskPct));
+                    marker.setPopupContent(popupHtml(activeSite));
+                }
+
+                setSimStatus('⚠ ML Server Offline (Fallback active) — run the Python Flask server on port 8000.');
+                statusPill.className = 'text-[9px] font-bold uppercase tracking-wider bg-red-500/10 border border-red-400/20 text-red-300 px-3.5 py-1.5 rounded-full flex items-center gap-1.5';
+                statusPill.innerHTML = '<span class="w-2.5 h-2.5 rounded-full bg-red-400"></span> Model Offline';
+            }
+        }
+
+        // ============================================================
+        // Simulated Scenarios
+        // ============================================================
+        function simulateExtremeMonsoon() {
+            sliders.rain.value = 280;
+            sliders.moisture.value = 96;
+            sliders.slope.value = 34;
+            sliders.vibration.value = 6.5;
+            scheduleFetch('Simulating cloudburst precipitation scenario…');
+        }
+
+        function resetToLiveData() {
+            sliders.rain.value = activeSite.rain;
+            sliders.moisture.value = activeSite.moisture;
+            sliders.slope.value = activeSite.slope;
+            sliders.vibration.value = activeSite.vibration;
+            scheduleFetch('Restored local baseline geological properties…');
+        }
+
+        function triggerEvacuationAlert() {
+            toggleAlertBanner(true);
+            setSimStatus('Evacuation warning forced by operator.');
+        }
+
+        // ============================================================
+        // Startup Initialization
+        // ============================================================
+        window.addEventListener('DOMContentLoaded', async () => {
+            syncSliderLabels();
+            lucide.createIcons();
+            // Start default selected site (Wayanad)
+            selectSite(activeSite);
+        });
+    </script>
 </body>
 </html>
