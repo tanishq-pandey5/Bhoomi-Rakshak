@@ -1,10 +1,5 @@
-- `[x]`: Implement vertical storytelling layout and generous vertical breathing room
-- `[x]`: Apply page constraints (max-width 1440px, px-16 margins)
-- `[x]`: Scale typography hierarchies (headings 56px-72px, threat scores 72px-100px)
-- `[x]`: Eliminate 90% of visible rectangular borders
-- `[x]`: Redesign IndiaMap to have transparent backgrounds, height 650px, and glowing boundaries
-- `[x]`: Reconfigure environmental signals and gauge cards to have side-by-side elements and larger proportions
-- `[x]`: Expand forecast area charts to full heights (420px and 360px) with custom tooltips
-- `[x]`: Rebuild alerts timeline, districts tables, and horizontal pipeline steps
-- `[x]`: Integrate new HTML dashboard (Leaflet + Chart.js) with premium styles and interactive sync
-- `[x]`: Commit and push to `dashboard-refactor` remote branch
+- `[x]` Overwrite `landslide/predict_server.py` with the new FastAPI backend, adding robust model and dataset path fallbacks
+- `[x]` Overwrite `vanilla/index.html` with the new HTML dashboard, preserving the Survey of India map boundary fixes
+- `[x]` Start the FastAPI backend server on port 8000 and the vanilla static server on port 3002
+- `[x]` Verify that the Leaflet risk grid loads correctly and point selection works
+- `[x]` Commit and push all changes to the remote branch `dashboard-refactor`
