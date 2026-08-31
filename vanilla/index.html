@@ -212,7 +212,9 @@
 
     <!-- Frontend Application Logic -->
     <script>
-        const API_BASE = "http://localhost:8000/api";
+        const API_BASE = window.location.origin.includes("localhost:8000") 
+            ? "/api" 
+            : "http://localhost:8000/api";
         let map, geojsonLayer, trendChart;
         
         // Bounding Box for Northeast India

@@ -9,6 +9,7 @@ import numpy as np
 import requests
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 # Fallback helper to load pickle files in environments without joblib
@@ -269,6 +270,26 @@ def fetch_live_environmental_data(lat: float, lon: float) -> Dict[str, Any]:
 class PredictionRequest(BaseModel):
     latitude: float = Field(..., ge=20.0, le=32.0)
     longitude: float = Field(..., ge=85.0, le=98.0)
+
+
+@app.get("/")
+def get_index():
+    """Serves the dashboard index.html at the root path of port 8000."""
+    resolved_html_path = None
+    possible_html_paths = [
+        "vanilla/index.html",
+        "index.html",
+        "../vanilla/index.html"
+    ]
+    for p in possible_html_paths:
+        if os.path.exists(p):
+            resolved_html_path = p
+            break
+            
+    if resolved_html_path:
+        return FileResponse(resolved_html_path)
+    else:
+        raise HTTPException(status_code=404, detail="Dashboard index.html file not found.")
 
 
 @app.get("/api/health")
