@@ -86,14 +86,18 @@ The North-Eastern mountain ranges of India face severe seasonal slope failure ha
 ```
 Bhoomi-Rakshak/
 ├── backend/                                 # Production FastAPI Backend & ML Engine
-│   ├── main.py                              # Core application, routes, and inference pipeline
-│   ├── landslide_model.pkl                  # Fitted LightGBM booster model
-│   ├── model_metadata.json                  # Feature column sequence and encoding metadata
-│   ├── SIH26001_landslide_risk_dataset_50000.csv # Geological risk training dataset
-│   ├── india_states_soi.geojson             # Survey of India state boundary polygons
-│   ├── india_national_boundary.geojson      # Official sovereign national boundary
-│   ├── india-boundary-data.js               # Geographic vector dataset
-│   ├── requirements.txt                     # Python dependencies
+│   ├── data/                                # Datasets & Survey of India boundary GeoJSONs
+│   │   ├── SIH26001_landslide_risk_dataset_50000.csv # 50k risk vector training dataset
+│   │   ├── india_states_soi.geojson         # Survey of India official state boundaries
+│   │   ├── india_national_boundary.geojson  # Sovereign national outer boundary
+│   │   └── india-boundary-data.js           # Geographic boundary dataset
+│   ├── models/                              # Pre-trained Machine Learning Models
+│   │   ├── landslide_model.pkl              # Fitted LightGBM booster model
+│   │   └── model_metadata.json              # Feature sequence and categorical encodings
+│   ├── templates/                           # Dashboard Templates
+│   │   └── index.html                       # Real-time Leaflet GIS surveillance dashboard
+│   ├── main.py                              # FastAPI server & real-time inference pipeline
+│   ├── requirements.txt                     # Pinned Python package dependencies
 │   ├── README.md                            # Backend documentation
 │   └── .gitignore                           # Backend ignore rules
 ├── scroll-site/                             # Cinematic Scroll Narrative Experience
