@@ -25,10 +25,14 @@ warnings.filterwarnings("ignore", category=InconsistentVersionWarning)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def find_file(*candidates: str) -> str:
+    subdirs = ["", "data/geojson", "geojson", "data", "models", "json", "config", "templates", "geo"]
     for c in candidates:
-        path = os.path.join(BASE_DIR, c)
-        if os.path.exists(path):
-            return path
+        for sub in subdirs:
+            path = os.path.join(BASE_DIR, sub, c) if sub else os.path.join(BASE_DIR, c)
+            if os.path.exists(path):
+                return path
+        if os.path.exists(c):
+            return c
     return os.path.join(BASE_DIR, candidates[0])
 
 DATASET_PATH = find_file("SIH26001_landslide_risk_dataset_50000.csv", "SIH26001_landslide_risk_dataset_50000 (1).csv")
@@ -435,7 +439,7 @@ def get_india_boundary_js():
 
 @app.get("/api/india-boundary")
 def get_india_boundary():
-    path = os.path.join(BASE_DIR, "india_national_boundary.geojson")
+    path = find_file("india_national_boundary.geojson", "data/geojson/india_national_boundary.geojson", "geojson/india_national_boundary.geojson")
     if os.path.exists(path):
         return FileResponse(path, media_type="application/geo+json")
     raise HTTPException(status_code=404, detail="Boundary file not found")
@@ -443,7 +447,7 @@ def get_india_boundary():
 
 @app.get("/api/india-states")
 def get_india_states():
-    path = os.path.join(BASE_DIR, "india_states_soi.geojson")
+    path = find_file("india_states_soi.geojson", "data/geojson/india_states_soi.geojson", "geojson/india_states_soi.geojson")
     if os.path.exists(path):
         return FileResponse(path, media_type="application/geo+json")
     raise HTTPException(status_code=404, detail="States file not found")

@@ -87,12 +87,15 @@ The North-Eastern mountain ranges of India face severe seasonal slope failure ha
 Bhoomi-Rakshak/
 ├── backend/                                 # Production FastAPI Backend & ML Engine
 │   ├── main.py                              # Core application, routes, and inference pipeline
+│   ├── index.html                           # Real-time Leaflet GIS surveillance dashboard
 │   ├── landslide_model.pkl                  # Fitted LightGBM booster model
-│   ├── model_metadata.json                  # Feature column sequence and encoding metadata
 │   ├── SIH26001_landslide_risk_dataset_50000.csv # Geological risk training dataset
-│   ├── india_states_soi.geojson             # Survey of India state boundary polygons
-│   ├── india_national_boundary.geojson      # Official sovereign national boundary
 │   ├── india-boundary-data.js               # Geographic vector dataset
+│   ├── data/geojson/                        # Survey of India boundary GeoJSON datasets
+│   │   ├── india_states_soi.geojson         # Survey of India state boundary polygons
+│   │   └── india_national_boundary.geojson  # Official sovereign national boundary
+│   ├── models/                              # Machine Learning configurations
+│   │   └── model_metadata.json              # Feature column sequence and encoding metadata
 │   ├── requirements.txt                     # Python dependencies
 │   ├── README.md                            # Backend documentation
 │   └── .gitignore                           # Backend ignore rules
