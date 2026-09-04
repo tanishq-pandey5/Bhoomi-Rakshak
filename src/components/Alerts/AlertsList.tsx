@@ -102,7 +102,7 @@ export const AlertsList: React.FC<AlertsListProps> = ({ onSelectState }) => {
                       {alert.location}
                     </span>
                     <span className="text-[10px] text-[#71839C] ml-auto font-mono">
-                      {alert.timeAgo}
+                      {alert.timestamp}
                     </span>
                   </div>
                   <p className="text-xs text-[#A7B6CC] leading-relaxed group-hover:text-[#F5F7FB] transition-colors">

@@ -1,7 +1,7 @@
 import React from 'react';
 import type { StateRiskProfile } from '../../data/mockData';
 import { getRiskColor } from '../../data/mockData';
-import { Clock, TrendingUp, TrendingDown } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 interface StateDetailsPanelProps {
   profile: StateRiskProfile;

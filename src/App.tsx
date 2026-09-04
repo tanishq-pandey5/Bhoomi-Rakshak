@@ -108,6 +108,25 @@ const App: React.FC = () => {
               </span>
               <span className="text-xs text-[#32D583] font-bold uppercase tracking-wider">System Operational</span>
             </div>
+
+            {/* Launch Live Dashboard CTA */}
+            <div className="flex flex-wrap items-center gap-4 mt-2">
+              <a
+                href="http://localhost:8000"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[#29A9FF] hover:bg-[#1a95e6] text-[#030B1C] font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-[#29A9FF]/20 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <Activity className="w-4 h-4" />
+                <span>Launch Live AI-GIS Dashboard</span>
+              </a>
+              <button
+                onClick={() => handleScrollTo('risk-map')}
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-lg border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold text-xs uppercase tracking-widest transition-all"
+              >
+                <span>State Risk View</span>
+              </button>
+            </div>
           </div>
 
           {/* Right silhouette mountain vector decoration */}

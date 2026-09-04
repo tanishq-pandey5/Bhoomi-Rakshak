@@ -256,8 +256,6 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
           >
             {Object.keys(stateGroups).map((stateName) => {
               const paths = stateGroups[stateName];
-              const stateProfile = getFullStateProfile(stateName);
-              const riskColor = getRiskColor(stateProfile.riskLevel);
               const isSelected = selectedState === stateName;
               const isHovered = hoveredStateName === stateName;
               const opacity = getStateOpacity(stateName);
@@ -318,8 +316,6 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({
                 {neStatesList.map((stateName) => {
                   const paths = stateGroups[stateName];
                   if (!paths) return null;
-                  const stateProfile = getFullStateProfile(stateName);
-                  const riskColor = getRiskColor(stateProfile.riskLevel);
                   const isSelected = selectedState === stateName;
                   const isHovered = hoveredStateName === stateName;
                   const opacity = getStateOpacity(stateName);

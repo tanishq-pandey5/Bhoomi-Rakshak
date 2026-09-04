@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Mountain, User } from 'lucide-react';
+import { Shield, Mountain, User, ExternalLink } from 'lucide-react';
 
 interface NavbarProps {
   onScrollTo: (sectionId: string) => void;
@@ -28,7 +28,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onScrollTo, lastUpdated }) => {
         </div>
 
         {/* Center: Navigation Links */}
-        <nav className="hidden md:flex items-center gap-10">
+        <nav className="hidden md:flex items-center gap-8">
           {[
             { label: 'Overview', id: 'dashboard' },
             { label: 'Risk Map', id: 'risk-map' },
@@ -44,6 +44,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onScrollTo, lastUpdated }) => {
               {item.label}
             </button>
           ))}
+
+          {/* Link to Live AI-GIS Dashboard */}
+          <a
+            href="http://localhost:8000"
+            target="_blank"
+            rel="noreferrer"
+            className="text-[10px] font-bold text-[#29A9FF] hover:text-white border border-[#29A9FF]/30 hover:border-[#29A9FF] bg-[#29A9FF]/10 hover:bg-[#29A9FF]/20 px-3 py-1.5 rounded-md tracking-widest uppercase transition-all flex items-center gap-1.5"
+          >
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#29A9FF] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#29A9FF]"></span>
+            </span>
+            <span>Live GIS Dashboard</span>
+            <ExternalLink className="w-3 h-3 ml-0.5 opacity-70" />
+          </a>
         </nav>
 
         {/* Right: Monitoring status & User profile */}
@@ -58,7 +73,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onScrollTo, lastUpdated }) => {
                 Live Monitoring
               </span>
               <span className="text-[8px] text-[#71839C] mt-0.5 leading-none font-medium">
-                Updated 2 min ago
+                {lastUpdated || 'Updated 2 min ago'}
               </span>
             </div>
           </div>
