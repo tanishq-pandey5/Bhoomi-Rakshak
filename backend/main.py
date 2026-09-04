@@ -25,14 +25,10 @@ warnings.filterwarnings("ignore", category=InconsistentVersionWarning)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def find_file(*candidates: str) -> str:
-    subdirs = ["", "data", "models", "templates", "geo"]
     for c in candidates:
-        for sub in subdirs:
-            path = os.path.join(BASE_DIR, sub, c) if sub else os.path.join(BASE_DIR, c)
-            if os.path.exists(path):
-                return path
-        if os.path.exists(c):
-            return c
+        path = os.path.join(BASE_DIR, c)
+        if os.path.exists(path):
+            return path
     return os.path.join(BASE_DIR, candidates[0])
 
 DATASET_PATH = find_file("SIH26001_landslide_risk_dataset_50000.csv", "SIH26001_landslide_risk_dataset_50000 (1).csv")
@@ -410,7 +406,7 @@ class PredictRequest(BaseModel):
 
 @app.get("/")
 def get_index():
-    index_file = find_file("index.html", "templates/index.html")
+    index_file = os.path.join(BASE_DIR, "index.html")
     if os.path.exists(index_file):
         return FileResponse(index_file)
     return {"message": "Bhoomi Rakshak API is online. Visit /docs for API documentation."}
@@ -423,7 +419,7 @@ def get_story():
 
 @app.get("/dashboard")
 def get_dashboard():
-    index_file = find_file("index.html", "templates/index.html")
+    index_file = os.path.join(BASE_DIR, "index.html")
     if os.path.exists(index_file):
         return FileResponse(index_file)
     return {"message": "Bhoomi Rakshak Dashboard not found."}
@@ -431,7 +427,7 @@ def get_dashboard():
 
 @app.get("/india-boundary-data.js")
 def get_india_boundary_js():
-    js_file = find_file("india-boundary-data.js", "data/india-boundary-data.js")
+    js_file = os.path.join(BASE_DIR, "india-boundary-data.js")
     if os.path.exists(js_file):
         return FileResponse(js_file, media_type="application/javascript")
     raise HTTPException(status_code=404, detail="Boundary JS not found")
@@ -439,7 +435,7 @@ def get_india_boundary_js():
 
 @app.get("/api/india-boundary")
 def get_india_boundary():
-    path = find_file("india_national_boundary.geojson", "data/india_national_boundary.geojson")
+    path = os.path.join(BASE_DIR, "india_national_boundary.geojson")
     if os.path.exists(path):
         return FileResponse(path, media_type="application/geo+json")
     raise HTTPException(status_code=404, detail="Boundary file not found")
@@ -447,7 +443,7 @@ def get_india_boundary():
 
 @app.get("/api/india-states")
 def get_india_states():
-    path = find_file("india_states_soi.geojson", "data/india_states_soi.geojson")
+    path = os.path.join(BASE_DIR, "india_states_soi.geojson")
     if os.path.exists(path):
         return FileResponse(path, media_type="application/geo+json")
     raise HTTPException(status_code=404, detail="States file not found")
