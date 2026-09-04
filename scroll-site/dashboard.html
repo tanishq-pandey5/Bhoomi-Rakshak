@@ -54,6 +54,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -100,10 +101,11 @@
         }
 
         #map {
-            height: 520px;
+            height: 540px;
             width: 100%;
             border-radius: 0.75rem;
             z-index: 10;
+            background-color: #0b1322;
         }
 
         /* Custom Scrollbar */
@@ -122,6 +124,44 @@
             background: #334155;
         }
 
+        /* Custom Leaflet Zoom & Attribution Controls */
+        .leaflet-control-zoom {
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
+        }
+        .leaflet-control-zoom-in, .leaflet-control-zoom-out {
+            background-color: rgba(15, 23, 42, 0.85) !important;
+            color: #f1f5f9 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+            backdrop-filter: blur(8px) !important;
+            width: 30px !important;
+            height: 30px !important;
+            line-height: 30px !important;
+        }
+        .leaflet-control-zoom-in:hover, .leaflet-control-zoom-out:hover {
+            background-color: rgba(30, 41, 59, 0.95) !important;
+            color: #38bdf8 !important;
+        }
+        .leaflet-control-attribution {
+            background: rgba(11, 19, 34, 0.85) !important;
+            color: #94a3b8 !important;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+            font-size: 10px !important;
+            padding: 2px 8px !important;
+            border-top-left-radius: 6px !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            backdrop-filter: blur(8px) !important;
+        }
+        .leaflet-control-attribution a {
+            color: #818cf8 !important;
+            text-decoration: none !important;
+        }
+        .leaflet-control-attribution a:hover {
+            text-decoration: underline !important;
+        }
+
         /* Custom Leaflet Dark popup */
         .leaflet-popup-content-wrapper {
             background: #0b1322 !important;
@@ -132,6 +172,22 @@
         }
         .leaflet-popup-tip {
             background: #0b1322 !important;
+        }
+
+        /* Custom Leaflet Tooltip for Sovereign India States */
+        .glass-tooltip {
+            background: rgba(11, 19, 34, 0.95) !important;
+            color: #f8fafc !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            border-radius: 6px !important;
+            font-family: 'JetBrains Mono', monospace !important;
+            font-size: 11px !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
+            backdrop-filter: blur(8px) !important;
+            padding: 4px 8px !important;
+        }
+        .glass-tooltip::before {
+            border-top-color: rgba(11, 19, 34, 0.95) !important;
         }
 
         /* Pulse pin marker */
@@ -281,31 +337,61 @@
             <div class="lg:col-span-8 flex flex-col space-y-4">
                 
                 <div class="glass-panel p-4 space-y-3 flex-1">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-2 border-b border-tactical-border">
-                        <div class="flex items-center space-x-2">
-                            <i data-lucide="map-pin" class="w-4 h-4 text-indigo-400"></i>
-                            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200">Interactive GIS Risk Surface</h2>
-                            <span class="text-[11px] text-slate-400">(Click anywhere on map to query)</span>
+                    <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3 pb-2 border-b border-tactical-border">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <div class="flex items-center space-x-2">
+                                <i data-lucide="map-pin" class="w-4 h-4 text-indigo-400"></i>
+                                <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200">Interactive GIS Risk Surface</h2>
+                            </div>
+                            <span class="text-[11px] font-mono text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                                Northeast India Hazard Zone (8 States)
+                            </span>
                         </div>
                         
                         <!-- Map Controls & Layer Switcher -->
-                        <div class="flex items-center space-x-1.5 self-end sm:self-auto">
-                            <button onclick="refreshHeatmap()" title="Refresh Heatmap Surface" class="px-2.5 py-1.5 bg-tactical-700 hover:bg-tactical-600 border border-slate-700 rounded-md text-xs font-mono flex items-center gap-1 transition">
-                                <i data-lucide="rotate-cw" class="w-3 h-3 text-indigo-400" id="refresh-icon"></i>
-                                <span>Sync Map</span>
+                        <div class="flex flex-wrap items-center gap-2 self-stretch xl:self-auto justify-between xl:justify-end">
+                            <!-- Focus NE Hazard Button -->
+                            <button onclick="resetNEView()" id="btn-view-ne" title="Focus Northeast India Landslide Hazard Corridor" class="px-2.5 py-1 rounded-md text-xs font-semibold font-mono transition flex items-center gap-1.5 bg-indigo-600/40 text-indigo-200 border border-indigo-500/50 hover:bg-indigo-600/60 shadow-sm">
+                                <i data-lucide="mountain-snow" class="w-3.5 h-3.5 text-cyan-400"></i>
+                                <span>Focus NE Region</span>
                             </button>
-                            <button onclick="locateUser()" title="My Coordinates" class="px-2.5 py-1.5 bg-tactical-700 hover:bg-tactical-600 border border-slate-700 rounded-md text-xs font-mono flex items-center gap-1 transition">
-                                <i data-lucide="crosshair" class="w-3 h-3 text-emerald-400"></i>
-                                <span>Locate</span>
+
+                            <!-- Basemap Mode Selector -->
+                            <div class="inline-flex rounded-lg bg-tactical-800/90 p-0.5 border border-slate-700/80 text-xs shadow-inner">
+                                <button onclick="setBaseMap('hybrid')" id="btn-map-hybrid" title="High-Resolution Satellite Hybrid (Imagery + Highways + Town Labels)" class="px-2.5 py-1 rounded-md text-xs font-medium font-mono transition flex items-center gap-1.5 bg-indigo-600/40 text-indigo-200 border border-indigo-500/50 shadow-sm shadow-indigo-500/20">
+                                    <i data-lucide="satellite" class="w-3.5 h-3.5 text-cyan-400"></i>
+                                    <span>Satellite</span>
+                                </button>
+                                <button onclick="setBaseMap('topo')" id="btn-map-topo" title="Topographic Elevation Relief & Contours" class="px-2.5 py-1 rounded-md text-xs font-medium font-mono text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition flex items-center gap-1.5">
+                                    <i data-lucide="mountain" class="w-3.5 h-3.5 text-amber-400"></i>
+                                    <span>Topo</span>
+                                </button>
+                                <button onclick="setBaseMap('streets')" id="btn-map-streets" title="National Geographic / OpenStreetMap Street Map" class="px-2.5 py-1 rounded-md text-xs font-medium font-mono text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition flex items-center gap-1.5">
+                                    <i data-lucide="map" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                    <span>National OSM</span>
+                                </button>
+                                <button onclick="setBaseMap('dark')" id="btn-map-dark" title="Tactical Dark Ops Canvas" class="px-2.5 py-1 rounded-md text-xs font-medium font-mono text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition flex items-center gap-1.5">
+                                    <i data-lucide="moon" class="w-3.5 h-3.5 text-slate-300"></i>
+                                    <span>Dark</span>
+                                </button>
+                            </div>
+
+                            <!-- Heatmap Toggle -->
+                            <button onclick="toggleHeatmap()" id="btn-toggle-heatmap" title="Toggle AI Landslide Risk Heatmap" class="px-2.5 py-1 rounded-md text-xs font-mono transition flex items-center gap-1 bg-rose-500/20 border border-rose-500/40 text-rose-300">
+                                <i data-lucide="flame" class="w-3 h-3 text-rose-400"></i>
+                                <span class="hidden sm:inline">Heatmap</span>
                             </button>
-                            <button onclick="resetNEView()" title="Fit NE Boundaries" class="px-2.5 py-1.5 bg-tactical-700 hover:bg-tactical-600 border border-slate-700 rounded-md text-xs font-mono flex items-center gap-1 transition">
-                                <i data-lucide="maximize" class="w-3 h-3 text-slate-300"></i>
-                                <span>Fit NE</span>
-                            </button>
-                            <button onclick="toggleMapType()" title="Switch Satellite / Dark" class="px-2.5 py-1.5 bg-tactical-700 hover:bg-tactical-600 border border-slate-700 rounded-md text-xs font-mono flex items-center gap-1 transition">
-                                <i data-lucide="layers" class="w-3 h-3 text-cyan-400"></i>
-                                <span id="map-type-label">Satellite</span>
-                            </button>
+
+                            <!-- Map Utilities -->
+                            <div class="flex items-center space-x-1">
+                                <button onclick="locateUser()" title="Center My GPS Coordinates" class="p-1.5 bg-tactical-700 hover:bg-tactical-600 border border-slate-700 rounded-md text-slate-300 hover:text-white transition">
+                                    <i data-lucide="crosshair" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                </button>
+                                <button onclick="refreshHeatmap()" title="Re-sync Heatmap from ML Pipeline" class="p-1.5 bg-tactical-700 hover:bg-tactical-600 border border-slate-700 rounded-md text-slate-300 hover:text-white transition">
+                                    <i data-lucide="rotate-cw" class="w-3.5 h-3.5 text-indigo-400" id="refresh-icon"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -317,11 +403,11 @@
                         <div class="absolute bottom-3 left-3 z-[400] glass-panel px-3 py-1.5 text-[11px] font-mono text-slate-300 border border-white/10 flex items-center space-x-3 pointer-events-none">
                             <div class="flex items-center space-x-1.5">
                                 <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
-                                <span>CURSOR:</span>
-                                <span id="hud-coords" class="text-cyan-300 font-bold">25.5788° N, 91.8933° E</span>
+                                <span>TARGET:</span>
+                                <span id="hud-coords" class="text-cyan-300 font-bold">25.8000° N, 93.0000° E</span>
                             </div>
                             <span class="text-slate-600">|</span>
-                            <span id="hud-elev" class="text-indigo-300">SRTM DEM Active</span>
+                            <span id="hud-basemap-label" class="text-cyan-300">Satellite Hybrid</span>
                         </div>
 
                         <!-- Heatmap Legend Overlay -->
@@ -549,8 +635,100 @@
     <script>
         const API_BASE = window.location.origin.startsWith('http') ? `${window.location.origin}/api` : "http://localhost:8000/api";
         
-        let map, heatLayer, currentBaseTile, activeMarker, pulseCircle;
-        let isSatellite = false;
+        const MAPTILER_KEY = 'E334IQuy1Ty2ZKXYZOPp';
+
+        // High-definition Basemaps (512x512 with -1 zoomOffset for ultra-crisp detail)
+        const BASEMAPS = {
+            hybrid: {
+                id: 'hybrid',
+                name: 'Satellite Hybrid (Orbital + Roads)',
+                primaryUrl: `https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}.jpg?key=${MAPTILER_KEY}`,
+                fallbackUrl: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                options: {
+                    tileSize: 512,
+                    zoomOffset: -1,
+                    minZoom: 2,
+                    maxZoom: 20,
+                    attribution: '&copy; MapTiler &copy; OpenStreetMap &copy; Esri'
+                },
+                fallbackOptions: {
+                    tileSize: 256,
+                    zoomOffset: 0,
+                    minZoom: 2,
+                    maxZoom: 19,
+                    attribution: 'Tiles &copy; Esri'
+                }
+            },
+            topo: {
+                id: 'topo',
+                name: 'Topographic Relief (Elevation & Contours)',
+                primaryUrl: `https://api.maptiler.com/maps/topo-v2/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`,
+                fallbackUrl: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+                options: {
+                    tileSize: 512,
+                    zoomOffset: -1,
+                    minZoom: 2,
+                    maxZoom: 20,
+                    attribution: '&copy; MapTiler &copy; OpenStreetMap'
+                },
+                fallbackOptions: {
+                    tileSize: 256,
+                    zoomOffset: 0,
+                    minZoom: 2,
+                    maxZoom: 17,
+                    subdomains: 'abc',
+                    attribution: '&copy; OpenStreetMap contributors, SRTM'
+                }
+            },
+            streets: {
+                id: 'streets',
+                name: 'National Geographic / OSM',
+                primaryUrl: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                fallbackUrl: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+                options: {
+                    tileSize: 256,
+                    zoomOffset: 0,
+                    minZoom: 2,
+                    maxZoom: 19,
+                    subdomains: 'abc',
+                    attribution: '&copy; OpenStreetMap contributors'
+                },
+                fallbackOptions: {
+                    tileSize: 256,
+                    zoomOffset: 0,
+                    minZoom: 2,
+                    maxZoom: 19,
+                    subdomains: 'abcd',
+                    attribution: '&copy; CartoDB &copy; OpenStreetMap'
+                }
+            },
+            dark: {
+                id: 'dark',
+                name: 'Tactical Nocturnal Canvas',
+                primaryUrl: `https://api.maptiler.com/maps/darkmatter/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`,
+                fallbackUrl: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+                options: {
+                    tileSize: 512,
+                    zoomOffset: -1,
+                    minZoom: 2,
+                    maxZoom: 20,
+                    attribution: '&copy; MapTiler &copy; CartoDB'
+                },
+                fallbackOptions: {
+                    tileSize: 256,
+                    zoomOffset: 0,
+                    minZoom: 2,
+                    maxZoom: 19,
+                    subdomains: 'abcd',
+                    attribution: '&copy; CartoDB'
+                }
+            }
+        };
+
+        let map, heatLayer, currentBaseTile, boundaryLayer, nationalBoundaryLayer, soiLinesLayer, activeMarker, pulseCircle;
+        let currentBasemapKey = 'hybrid';
+        let showHeatmap = true;
+        let showBoundaries = true;
         let rainfallChart = null;
         let currentTargetLat = 26.1445;
         let currentTargetLon = 91.7362;
@@ -597,14 +775,21 @@
         function initMap() {
             map = L.map('map', {
                 zoomControl: false,
-                attributionControl: false
-            }).setView([25.5788, 91.8933], 7);
+                attributionControl: true,
+                minZoom: 3,
+                maxZoom: 19
+            }).setView([25.8, 93.0], 7);
 
             L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-            currentBaseTile = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                maxZoom: 18
-            }).addTo(map);
+            // Default to High-Definition Satellite Hybrid
+            setBaseMap('hybrid');
+
+            // Force layout invalidations on multiple ticks to guarantee tiles render smoothly
+            setTimeout(() => { if (map) map.invalidateSize(); }, 100);
+            setTimeout(() => { if (map) map.invalidateSize(); }, 400);
+            setTimeout(() => { if (map) map.invalidateSize(); }, 1200);
+            window.addEventListener('resize', () => { if (map) map.invalidateSize(); });
 
             // Cursor coordinate tracking
             map.on('mousemove', function(e) {
@@ -618,32 +803,89 @@
                 fetchLocationPrediction(e.latlng.lat, e.latlng.lng);
             });
 
-            loadNEBoundaries();
+            // Clean map view focused on NE hazard corridor - no line overlays
             refreshHeatmap();
         }
 
-        // Load Northeast India GeoJSON
-        async function loadNEBoundaries() {
-            try {
-                const res = await fetch("https://raw.githubusercontent.com/india-in-data/india-states-2019/master/india_states.geojson");
-                const stateData = await res.json();
+        // Fit Northeast India Hazard Zone
+        function resetNEView() {
+            map.flyTo([25.8, 93.0], 7, { duration: 1.0 });
+        }
 
-                const neFeatures = stateData.features.filter(f => {
-                    const stName = f.properties.ST_NM || f.properties.state || "";
-                    return NE_STATES_LIST.some(ne => stName.toLowerCase().includes(ne.toLowerCase()));
-                });
+        // Basemap Switcher with Automatic High-Availability Failover
+        function setBaseMap(type) {
+            const config = BASEMAPS[type];
+            if (!config) return;
 
-                L.geoJSON({ type: "FeatureCollection", features: neFeatures }, {
-                    style: {
-                        color: "#6366f1",
-                        weight: 2,
-                        fillOpacity: 0.04,
-                        fillColor: "#6366f1",
-                        dashArray: "4, 4"
+            if (currentBaseTile && map.hasLayer(currentBaseTile)) {
+                map.removeLayer(currentBaseTile);
+            }
+
+            currentBasemapKey = type;
+            let errorCount = 0;
+            let hasSwitched = false;
+
+            currentBaseTile = L.tileLayer(config.primaryUrl, config.options);
+            
+            // Fallback handler: if external tile server drops, auto-switch to fallback layer
+            currentBaseTile.on('tileerror', function() {
+                errorCount++;
+                if (errorCount >= 3 && !hasSwitched && config.fallbackUrl) {
+                    hasSwitched = true;
+                    console.warn(`Basemap notice: Auto-switching ${type} to backup high-availability provider.`);
+                    if (currentBaseTile && map.hasLayer(currentBaseTile)) {
+                        map.removeLayer(currentBaseTile);
                     }
-                }).addTo(map);
-            } catch (err) {
-                console.log("Boundary layer loaded.");
+                    currentBaseTile = L.tileLayer(config.fallbackUrl, config.fallbackOptions || config.options);
+                    currentBaseTile.addTo(map);
+                    if (currentBaseTile.bringToBack) currentBaseTile.bringToBack();
+                }
+            });
+
+            currentBaseTile.addTo(map);
+
+            if (currentBaseTile.bringToBack) {
+                currentBaseTile.bringToBack();
+            }
+
+            // Update UI buttons
+            ['hybrid', 'topo', 'streets', 'dark'].forEach(k => {
+                const btn = document.getElementById(`btn-map-${k}`);
+                if (btn) {
+                    if (k === type) {
+                        btn.className = "px-2.5 py-1 rounded-md text-xs font-medium font-mono transition flex items-center gap-1.5 bg-indigo-600/40 text-indigo-200 border border-indigo-500/50 shadow-sm shadow-indigo-500/20";
+                    } else {
+                        btn.className = "px-2.5 py-1 rounded-md text-xs font-medium font-mono text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition flex items-center gap-1.5";
+                    }
+                }
+            });
+
+            // Update HUD Label
+            const hud = document.getElementById('hud-basemap-label');
+            if (hud) {
+                hud.innerText = config.name;
+            }
+
+            setTimeout(() => { if (map) map.invalidateSize(); }, 100);
+        }
+
+        // Toggle Heatmap Layer
+        function toggleHeatmap() {
+            showHeatmap = !showHeatmap;
+            const btn = document.getElementById('btn-toggle-heatmap');
+            if (heatLayer) {
+                if (showHeatmap) {
+                    map.addLayer(heatLayer);
+                } else {
+                    map.removeLayer(heatLayer);
+                }
+            }
+            if (btn) {
+                if (showHeatmap) {
+                    btn.className = "px-2 py-1 rounded-md text-xs font-mono transition flex items-center gap-1 bg-rose-500/20 border border-rose-500/40 text-rose-300";
+                } else {
+                    btn.className = "px-2 py-1 rounded-md text-xs font-mono transition flex items-center gap-1 bg-slate-800/60 border border-slate-700/60 text-slate-500 opacity-60";
+                }
             }
         }
 
@@ -657,13 +899,15 @@
                 if (!res.ok) throw new Error("Heatmap API offline");
                 const data = await res.json();
 
-                if (heatLayer) map.removeLayer(heatLayer);
+                if (heatLayer && map.hasLayer(heatLayer)) {
+                    map.removeLayer(heatLayer);
+                }
 
                 // Continuous organic gradient mapping
                 heatLayer = L.heatLayer(data.points, {
                     radius: 45,
                     blur: 35,
-                    maxZoom: 10,
+                    maxZoom: 11,
                     minOpacity: 0.35,
                     gradient: {
                         0.2: '#10b981', // Green
@@ -671,7 +915,11 @@
                         0.65: '#f43f5e', // Rose
                         0.85: '#e11d48'  // Deep Crimson
                     }
-                }).addTo(map);
+                });
+
+                if (showHeatmap) {
+                    heatLayer.addTo(map);
+                }
 
                 document.getElementById('status-pill').className = "text-xs px-3 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center space-x-2 font-mono";
                 document.getElementById('status-text').innerText = "AI Pipeline: Active";
@@ -686,6 +934,7 @@
         // Fetch Live Location Prediction
         async function fetchLocationPrediction(lat, lon) {
             setMarker(lat, lon);
+            document.getElementById('hud-coords').innerText = `${Number(lat).toFixed(4)}° N, ${Number(lon).toFixed(4)}° E`;
 
             try {
                 const res = await fetch(`${API_BASE}/predict`, {
@@ -695,13 +944,9 @@
                 });
                 const data = await res.json();
 
-                const toast = document.getElementById('region-toast');
                 if (data.outside_ne_india) {
-                    toast.classList.remove('hidden');
-                    document.getElementById('region-toast-msg').innerText = data.message || "Location outside Northeast India region.";
+                    handleOutsideNERegion(data, lat, lon);
                     return;
-                } else {
-                    toast.classList.add('hidden');
                 }
 
                 currentLiveData = data;
@@ -710,6 +955,76 @@
             } catch (err) {
                 console.error("Backend error:", err);
             }
+        }
+
+        // Handle clicking anywhere outside the 8 North-Eastern states
+        function handleOutsideNERegion(data, lat, lon) {
+            const latitude = (lat !== undefined && lat !== null) ? lat : (data.latitude || currentTargetLat);
+            const longitude = (lon !== undefined && lon !== null) ? lon : (data.longitude || currentTargetLon);
+            const stateStr = data.state || 'Non-NE Territory';
+            const distStr = data.district || 'District Area';
+
+            // 1. Only coordinates, state, and district are shown
+            document.getElementById('target-district-badge').innerText = `${distStr}, ${stateStr}`;
+            document.getElementById('hud-coords').innerText = `${Number(latitude).toFixed(4)}° N, ${Number(longitude).toFixed(4)}° E`;
+
+            // 2. Risk Gauge Dial & Values set to null
+            const circle = document.getElementById('gauge-circle');
+            circle.style.strokeDashoffset = 251.2; // 0% circumference
+            circle.setAttribute('stroke', '#334155');
+
+            const gaugeVal = document.getElementById('gauge-risk-val');
+            gaugeVal.innerHTML = `<span class="text-slate-500 font-mono text-3xl font-bold">null</span>`;
+
+            const gaugeLabel = document.getElementById('gauge-risk-label');
+            gaugeLabel.innerText = "OUTSIDE MONITORING ZONE";
+            gaugeLabel.className = "text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-0.5";
+
+            // 3. Operational Directive Card
+            const directiveCard = document.getElementById('action-directive-card');
+            directiveCard.className = "p-3 rounded-lg bg-slate-800/40 border border-slate-700/50 text-xs text-slate-400 flex items-start space-x-2.5";
+            document.getElementById('action-title').innerText = "Surveillance Restricted:";
+            document.getElementById('action-desc').innerText = ` ${distStr}, ${stateStr} is outside the Northeast India landslide monitoring corridor. Telemetry inputs & ML inference are inactive.`;
+
+            // 4. Notifications
+            document.getElementById('alert-banner').classList.add('hidden');
+            const toast = document.getElementById('region-toast');
+            if (toast) {
+                toast.classList.remove('hidden');
+                document.getElementById('region-toast-msg').innerText = `Location in ${distStr}, ${stateStr} (${Number(latitude).toFixed(4)}° N, ${Number(longitude).toFixed(4)}° E) is outside Northeast India. All data values are null.`;
+            }
+
+            // 5. Environmental & Sensor Telemetry -> All values null, progress bars 0%
+            document.getElementById('card-rain-24h').innerHTML = `<span class="text-slate-500 font-mono font-normal">null</span>`;
+            document.getElementById('bar-rain-24h').style.width = '0%';
+
+            document.getElementById('card-rain-72h').innerHTML = `<span class="text-slate-500 font-mono font-normal">null</span>`;
+            document.getElementById('bar-rain-72h').style.width = '0%';
+
+            document.getElementById('card-soil-moist').innerHTML = `<span class="text-slate-500 font-mono font-normal">null</span>`;
+            document.getElementById('bar-soil-moist').style.width = '0%';
+
+            document.getElementById('card-slope').innerHTML = `<span class="text-slate-500 font-mono font-normal">null</span>`;
+            document.getElementById('bar-slope').style.width = '0%';
+
+            document.getElementById('card-elevation').innerHTML = `<span class="text-slate-500 font-mono font-normal">null</span>`;
+            document.getElementById('card-soil-depth').innerHTML = `<span class="text-slate-500 font-mono font-normal">null</span>`;
+            document.getElementById('card-lithology').innerHTML = `<span class="text-slate-500 font-mono font-normal">null</span>`;
+            document.getElementById('card-road-dist').innerHTML = `<span class="text-slate-500 font-mono font-normal">null</span>`;
+
+            document.getElementById('data-quality-badge').innerText = "Quality: Unmonitored Zone";
+            document.getElementById('insp-rsi').innerHTML = `<span class="text-slate-500 font-mono">null</span>`;
+            document.getElementById('insp-rsli').innerHTML = `<span class="text-slate-500 font-mono">null</span>`;
+            document.getElementById('insp-time').innerText = new Date().toLocaleTimeString();
+
+            // 6. Precipitation Profile Chart -> Set all points to null
+            if (rainfallChart) {
+                rainfallChart.data.datasets[0].data = [null, null, null, null, null, null, null, null, null, null, null];
+                rainfallChart.data.datasets[1].data = [null, null, null, null, null, null, null, null, null, null, null];
+                rainfallChart.update();
+            }
+
+            lucide.createIcons();
         }
 
         // Set visual pin and pulse ring on map
@@ -735,11 +1050,20 @@
 
         // Update Dashboard Elements
         function updateDashboard(data) {
+            if (data.outside_ne_india) {
+                handleOutsideNERegion(data, data.latitude, data.longitude);
+                return;
+            }
+
+            const toast = document.getElementById('region-toast');
+            if (toast) toast.classList.add('hidden');
+
             const riskPct = data.risk_percentage;
             const riskLevel = data.risk_level;
 
             // Target District Badge
             document.getElementById('target-district-badge').innerText = `${data.district}, ${data.state}`;
+            document.getElementById('hud-coords').innerText = `${Number(data.latitude).toFixed(4)}° N, ${Number(data.longitude).toFixed(4)}° E`;
 
             // Risk Gauge & Dial
             const circle = document.getElementById('gauge-circle');
@@ -749,7 +1073,8 @@
 
             const gaugeVal = document.getElementById('gauge-risk-val');
             const gaugeLabel = document.getElementById('gauge-risk-label');
-            gaugeVal.innerText = `${riskPct}%`;
+            gaugeVal.innerHTML = `${riskPct}%`;
+            gaugeVal.className = "text-3xl font-black tracking-tight font-mono text-white";
 
             let gaugeColor = '#10b981';
             let actionTitle = "Normal Monitoring:";
@@ -961,23 +1286,11 @@
             }
         }
 
-        // Toggle Satellite Layer
+        // Toggle Satellite / Map Type Cycle
         function toggleMapType() {
-            map.removeLayer(currentBaseTile);
-            const label = document.getElementById('map-type-label');
-            if (!isSatellite) {
-                currentBaseTile = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                    maxZoom: 18
-                }).addTo(map);
-                isSatellite = true;
-                label.innerText = "Dark Canvas";
-            } else {
-                currentBaseTile = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                    maxZoom: 18
-                }).addTo(map);
-                isSatellite = false;
-                label.innerText = "Satellite";
-            }
+            const keys = ['hybrid', 'topo', 'streets', 'dark'];
+            const nextIdx = (keys.indexOf(currentBasemapKey) + 1) % keys.length;
+            setBaseMap(keys[nextIdx]);
         }
 
         function round(num, decimals) {

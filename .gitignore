@@ -31,3 +31,10 @@ dist-ssr
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+
+# Reference templates
+lets-scroll-main/
