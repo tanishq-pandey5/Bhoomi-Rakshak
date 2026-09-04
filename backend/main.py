@@ -139,6 +139,8 @@ app.add_middleware(
 
 SCROLL_SITE_DIR = os.path.join(BASE_DIR, "scroll-site")
 if not os.path.exists(SCROLL_SITE_DIR):
+    SCROLL_SITE_DIR = os.path.abspath(os.path.join(BASE_DIR, "../scroll-site"))
+if not os.path.exists(SCROLL_SITE_DIR):
     SCROLL_SITE_DIR = os.path.abspath(os.path.join(BASE_DIR, "../Bhoomi Rakshak/scroll-site"))
 
 if os.path.exists(SCROLL_SITE_DIR):
