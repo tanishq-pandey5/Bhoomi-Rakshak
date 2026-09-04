@@ -119,6 +119,57 @@ Bhoomi-Rakshak/
 
 ---
 
+## 📦 JSON & GeoJSON Architecture & Organization
+
+To maintain modularity, clean separation of concerns, and maximum runtime performance, all `.json` and `.geojson` files are categorized into dedicated subsystems:
+
+| File Pattern / Path | Classification | Purpose & Scope |
+|---|---|---|
+| `backend/data/geojson/*.geojson` | **Geographic Vectors** | Official Survey of India (SOI) national borders and state polygon vectors used for offline ray-casting geocoding and Leaflet boundary rendering. |
+| `backend/models/*.json` | **ML Pipeline Metadata** | Feature sequence (`feature_names`), categorical label encoders, and training baseline parameters for the LightGBM inference model. |
+| `package.json`, `tsconfig*.json` | **Project Root Tooling** | Standard Node.js, Vite, and TypeScript project manifests. These reside strictly at the repository root as mandated by modern web build tooling. |
+
+### Robust Path Resolution (`find_file`)
+The backend inference engine in `main.py` implements a resilient resolution utility (`find_file`), ensuring backwards and forwards compatibility whether files reside in `data/geojson/`, `models/`, `data/`, or root:
+```python
+def find_file(*candidates: str) -> str:
+    subdirs = ["", "data/geojson", "geojson", "data", "models", "json", "config", "templates", "geo"]
+    for c in candidates:
+        for sub in subdirs:
+            path = os.path.join(BASE_DIR, sub, c) if sub else os.path.join(BASE_DIR, c)
+            if os.path.exists(path):
+                return path
+        if os.path.exists(c):
+            return c
+    return os.path.join(BASE_DIR, candidates[0])
+```
+
+---
+
+## ⚡ Repository Performance & Git Push Optimization
+
+### Why Git Pushes Can Take Time
+If you notice that pushing changes to GitHub takes longer than expected, this is due to three architectural factors:
+
+1. **Heavy Binary Media Assets (>80 MB)**:
+   - Git tracks full file snapshots. The repository contains high-resolution video scrub sequences (`Inspiration/*.mov` ~49 MB, `scroll-site/*.mp4` ~10 MB) and a 50,000-row geological CSV dataset (`9.5 MB`).
+   - Because binary media cannot be delta-compressed line-by-line, Git must compress and transmit complete binary packfiles over HTTPS on every branch push.
+2. **Upstream Network Upload Constraints**:
+   - Packfile upload speeds are constrained by the network connection's upstream/upload bandwidth (typically 5× to 10× slower than download speeds).
+3. **GitHub Branch Protection Rules on `main` (`GH013`)**:
+   - The `main` branch enforces rule `GH013`: direct command-line pushes to `main` are restricted, requiring changes to be pushed to a feature branch and merged via Pull Request.
+
+### Recommended Production Optimization
+- **Git Large File Storage (Git LFS)**: To keep local repository clones lightweight and make git pushes instantaneous (1–2 seconds), track binary video assets via Git LFS:
+  ```bash
+  git lfs install
+  git lfs track "*.mp4" "*.mov" "*.pkl" "*.csv"
+  git add .gitattributes
+  ```
+- **External CDN Storage**: In production deployments, serve video files and high-res stills from an S3 bucket or Cloudflare R2 CDN rather than bundling them into the git repository.
+
+---
+
 ## 🚀 Quickstart Guide
 
 ### Prerequisites
