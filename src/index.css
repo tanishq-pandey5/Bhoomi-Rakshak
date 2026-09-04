@@ -11,68 +11,100 @@
 
 body {
   margin: 0;
-  background: radial-gradient(circle at 50% -15%, rgba(22, 184, 166, 0.22), transparent 48%),
-              radial-gradient(circle at 50% 115%, rgba(22, 184, 166, 0.16), transparent 48%),
-              #051321;
-  color: #F5F7FA;
+  background-color: #030B1C;
+  background-image: 
+    radial-gradient(circle at 15% 10%, rgba(91, 108, 231, 0.28), transparent 30%),
+    radial-gradient(circle at 80% 35%, rgba(41, 169, 255, 0.12), transparent 30%),
+    linear-gradient(180deg, #050A20 0%, #061B38 50%, #020817 100%);
+  color: #F5F7FB;
   overflow-x: hidden;
   min-height: 100vh;
+  position: relative;
 }
 
-/* Glass panel style */
+/* Starry Atmosphere Overlay */
+body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.15;
+  background-image: 
+    radial-gradient(white, rgba(255, 255, 255, 0.2) 1.2px, transparent 20px),
+    radial-gradient(white, rgba(255, 255, 255, 0.1) 1.5px, transparent 30px);
+  background-size: 280px 280px, 180px 180px;
+  background-position: 0 0, 40px 60px;
+}
+
+/* Redesigned Card Panel - matching reference image design rules */
 .glass-panel {
-  background: rgba(8, 25, 41, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-  border-radius: 12px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(8, 24, 48, 0.45);
+  border: 1px solid rgba(120, 180, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .glass-panel-hover:hover {
-  border-color: rgba(22, 184, 166, 0.25);
-  box-shadow: 0 8px 30px rgba(22, 184, 166, 0.08);
-  transform: translateY(-1px);
+  border-color: rgba(120, 180, 255, 0.16);
+  box-shadow: 0 8px 30px rgba(41, 169, 255, 0.05);
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #071A2B;
+  background: #030B1C;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 99px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(22, 184, 166, 0.5);
+  background: rgba(41, 169, 255, 0.3);
 }
 
-/* Pulse animation for live monitoring */
+/* Pulse indicators */
 @keyframes pulse-green {
   0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+    transform: scale(0.92);
+    box-shadow: 0 0 0 0 rgba(50, 213, 131, 0.5);
   }
   70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+    transform: scale(1.08);
+    box-shadow: 0 0 0 6px rgba(50, 213, 131, 0);
   }
   100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+    transform: scale(0.92);
+    box-shadow: 0 0 0 0 rgba(50, 213, 131, 0);
   }
 }
 
 .pulse-green-dot {
-  animation: pulse-green 2s infinite;
+  animation: pulse-green 2.5s infinite ease-in-out;
+}
+
+/* Section Header Typography style */
+.section-title {
+  font-size: 32px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: #F5F7FB;
+  line-height: 1.2;
+}
+
+.section-subtitle {
+  font-size: 14px;
+  font-weight: 400;
+  color: #A7B6CC;
+  margin-top: 4px;
 }
 
 /* Accessibility: prefers-reduced-motion support */

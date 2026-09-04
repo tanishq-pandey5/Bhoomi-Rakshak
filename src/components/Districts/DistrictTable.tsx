@@ -72,43 +72,47 @@ export const DistrictTable: React.FC<DistrictTableProps> = ({ onSelectState, sel
 
   const getAlertBadgeStyles = (status: DistrictRow['alertStatus']) => {
     switch (status) {
-      case 'Active': return 'bg-riskCritical/10 text-riskVeryHigh border-riskCritical/20';
-      case 'Monitoring': return 'bg-saffronAccent/10 text-saffronAccent border-saffronAccent/20';
-      default: return 'bg-riskVeryLow/10 text-riskVeryLow border-riskVeryLow/20';
+      case 'Active': return 'text-[#FF4D5A] bg-[#FF4D5A]/10';
+      case 'Monitoring': return 'text-[#F5C451] bg-[#F5C451]/10';
+      default: return 'text-[#32D583] bg-[#32D583]/10';
     }
   };
 
   return (
-    <div className="glass-panel p-5 flex flex-col h-full gap-4">
+    <div className="flex flex-col gap-6 w-full mt-4">
       
       {/* Header and Search */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h3 className="text-lg font-semibold tracking-wide text-textWhite">Most Vulnerable Districts</h3>
-          <p className="text-xs text-textMuted mt-0.5 font-sans">National ranking based on current telemetry inputs</p>
+          <span className="text-[10px] text-[#71839C] uppercase font-bold tracking-widest block">
+            Regional Threat Roster
+          </span>
+          <h3 className="text-2xl font-bold uppercase tracking-wider text-[#F5F7FB] mt-1">
+            Most Vulnerable Districts
+          </h3>
         </div>
 
         {/* Search Input */}
-        <div className="relative w-full sm:w-60">
-          <Search className="absolute left-3 top-2.5 w-4 h-4 text-textMuted" />
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3.5 top-3 w-4 h-4 text-[#71839C]" />
           <input
             type="text"
             placeholder="Search district/state..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-9 pl-9 pr-4 rounded-lg bg-bgDark border border-white/8 text-xs text-textWhite placeholder:text-textMuted focus:outline-none focus:border-tealAccent transition-colors"
+            className="w-full h-10 pl-10 pr-4 rounded-full bg-[#081830]/40 border border-white/5 text-xs text-[#F5F7FB] placeholder-[#71839C] focus:outline-none focus:border-[#29A9FF]/30 transition-colors"
           />
         </div>
       </div>
 
       {/* Responsive Displays */}
-      <div className="flex-1 overflow-x-auto min-h-[300px] max-h-[480px] custom-scrollbar pr-1">
+      <div className="flex-1 overflow-x-auto min-h-[300px] max-h-[440px] pr-1">
         
         {/* DESKTOP TABLE VIEW */}
-        <table className="hidden md:table w-full text-left border-collapse text-xs">
+        <table className="hidden md:table w-full text-left border-collapse text-xs select-none">
           <thead>
-            <tr className="border-b border-white/10 text-textMuted uppercase font-bold tracking-wider">
-              <th className="py-3 px-2 w-12 text-center">Rank</th>
+            <tr className="border-b border-white/5 text-[#71839C] uppercase font-bold tracking-widest text-[9px]">
+              <th className="py-3 px-2 w-16 text-center">Rank</th>
               <th className="py-3 px-3">District</th>
               <th className="py-3 px-3">State</th>
               <th className="py-3 px-3 text-center">Risk Score</th>
@@ -127,23 +131,23 @@ export const DistrictTable: React.FC<DistrictTableProps> = ({ onSelectState, sel
                   <tr
                     key={`${row.stateName}-${row.districtName}`}
                     onClick={() => handleRowClick(row.stateName)}
-                    className={`border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors duration-150 ${
-                      isSelected ? 'bg-tealAccent/5 font-medium' : ''
+                    className={`border-b border-white/5 hover:bg-white/3 cursor-pointer transition-colors duration-150 ${
+                      isSelected ? 'bg-[#29A9FF]/5' : ''
                     }`}
                   >
-                    <td className="py-3 px-2 text-center text-textMuted font-mono">#{row.rank}</td>
-                    <td className="py-3 px-3 font-semibold text-textWhite">{row.districtName}</td>
-                    <td className="py-3 px-3 text-textMuted">{row.stateName}</td>
-                    <td className="py-3 px-3 text-center font-bold text-textWhite font-mono">{row.riskScore}%</td>
-                    <td className="py-3 px-3">
-                      <span className="flex items-center gap-1.5" style={{ color: riskColor }}>
+                    <td className="py-4 px-2 text-center text-[#71839C] font-mono">#{row.rank}</td>
+                    <td className="py-4 px-3 font-semibold text-[#F5F7FB]">{row.districtName}</td>
+                    <td className="py-4 px-3 text-[#A7B6CC]">{row.stateName}</td>
+                    <td className="py-4 px-3 text-center font-bold text-[#F5F7FB] font-mono">{row.riskScore}%</td>
+                    <td className="py-4 px-3">
+                      <span className="flex items-center gap-2" style={{ color: riskColor }}>
                         <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: riskColor }} />
                         {row.riskLevel}
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-textMuted">{row.mainDriver}</td>
-                    <td className="py-3 px-3 text-center">
-                      <span className={`px-2 py-0.5 rounded border text-[9px] font-bold uppercase ${getAlertBadgeStyles(row.alertStatus)}`}>
+                    <td className="py-4 px-3 text-[#A7B6CC]">{row.mainDriver}</td>
+                    <td className="py-4 px-3 text-center">
+                      <span className={`px-2.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider ${getAlertBadgeStyles(row.alertStatus)}`}>
                         {row.alertStatus}
                       </span>
                     </td>
@@ -152,14 +156,14 @@ export const DistrictTable: React.FC<DistrictTableProps> = ({ onSelectState, sel
               })
             ) : (
               <tr>
-                <td colSpan={7} className="text-center py-12 text-textMuted">No districts found</td>
+                <td colSpan={7} className="text-center py-12 text-[#71839C]">No districts found</td>
               </tr>
             )}
           </tbody>
         </table>
 
         {/* MOBILE STACKED CARDS VIEW */}
-        <div className="md:hidden flex flex-col gap-3">
+        <div className="md:hidden flex flex-col gap-4">
           {filteredRows.length > 0 ? (
             filteredRows.map(row => {
               const isSelected = selectedState === row.stateName;
@@ -169,38 +173,35 @@ export const DistrictTable: React.FC<DistrictTableProps> = ({ onSelectState, sel
                 <div
                   key={`${row.stateName}-${row.districtName}-mob`}
                   onClick={() => handleRowClick(row.stateName)}
-                  className={`p-3.5 rounded-lg border flex flex-row gap-4 items-center transition-all duration-150 cursor-pointer ${
+                  className={`p-4 rounded-xl border flex flex-row gap-4 items-center transition-all duration-150 cursor-pointer ${
                     isSelected 
-                      ? 'bg-tealAccent/5 border-tealAccent/30' 
-                      : 'bg-white/5 border-white/8 hover:bg-white/8'
+                      ? 'bg-[#29A9FF]/5 border-[#29A9FF]/30' 
+                      : 'bg-white/3 border-white/5 hover:bg-white/5'
                   }`}
                 >
-                  {/* Left: Square Index / telemetry badge */}
-                  <div className="w-16 h-16 shrink-0 rounded-lg bg-bgDark border border-white/8 flex flex-col items-center justify-center relative overflow-hidden">
-                    <span className="text-[10px] text-textMuted uppercase font-semibold">Rank</span>
-                    <span className="text-sm font-bold text-textWhite font-mono mt-0.5">#{row.rank}</span>
+                  <div className="w-14 h-14 shrink-0 rounded-lg bg-[#08264A]/30 border border-white/5 flex flex-col items-center justify-center relative overflow-hidden">
+                    <span className="text-[9px] text-[#71839C] uppercase font-bold">Rank</span>
+                    <span className="text-xs font-bold text-[#F5F7FB] font-mono mt-0.5">#{row.rank}</span>
                   </div>
 
-                  {/* Right: Details block */}
                   <div className="flex-1 flex flex-col gap-1">
                     <div className="flex items-center justify-between gap-2">
-                      <h4 className="text-xs font-bold text-textWhite">{row.districtName}</h4>
-                      <span className={`px-1.5 py-0.5 rounded border text-[8px] font-bold uppercase ${getAlertBadgeStyles(row.alertStatus)}`}>
+                      <h4 className="text-xs font-bold text-[#F5F7FB]">{row.districtName}</h4>
+                      <span className={`px-2 py-0.5 rounded text-[7px] font-bold uppercase ${getAlertBadgeStyles(row.alertStatus)}`}>
                         {row.alertStatus}
                       </span>
                     </div>
 
-                    <div className="flex justify-between items-baseline text-[10px] text-textMuted mt-0.5">
+                    <div className="flex justify-between items-baseline text-[10px] text-[#A7B6CC] mt-0.5">
                       <span>{row.stateName}</span>
                       <span className="font-bold font-mono" style={{ color: riskColor }}>
                         {row.riskScore}% Risk
                       </span>
                     </div>
 
-                    {/* Pill Action Button */}
                     <div className="flex justify-between items-center mt-1 pt-1 border-t border-white/5">
-                      <span className="text-[9px] text-textMuted block">Trigger: {row.mainDriver}</span>
-                      <button className="px-3 py-0.5 rounded text-[9px] font-bold bg-textWhite text-bgDark hover:bg-textWhite/90 transition-colors">
+                      <span className="text-[8px] text-[#71839C] block">Trigger: {row.mainDriver}</span>
+                      <button className="px-3 py-0.5 rounded-full text-[8px] font-bold bg-[#F5F7FB] text-[#030B1C] hover:bg-white/90 transition-colors">
                         Select
                       </button>
                     </div>
@@ -209,7 +210,7 @@ export const DistrictTable: React.FC<DistrictTableProps> = ({ onSelectState, sel
               );
             })
           ) : (
-            <div className="text-center py-12 text-textMuted text-xs">No districts found</div>
+            <div className="text-center py-12 text-[#71839C] text-xs">No districts found</div>
           )}
         </div>
 

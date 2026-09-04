@@ -1,0 +1,5 @@
+- `[x]` Overwrite `landslide/predict_server.py` with the new FastAPI backend, adding robust model and dataset path fallbacks
+- `[x]` Overwrite `vanilla/index.html` with the new HTML dashboard, preserving the Survey of India map boundary fixes
+- `[x]` Start the FastAPI backend server on port 8000 and the vanilla static server on port 3002
+- `[x]` Verify that the Leaflet risk grid loads correctly and point selection works
+- `[x]` Commit and push all changes to the remote branch `dashboard-refactor`

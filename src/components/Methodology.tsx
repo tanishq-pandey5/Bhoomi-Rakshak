@@ -8,63 +8,71 @@ export const Methodology: React.FC = () => {
       title: 'Collect',
       desc: 'Rainfall, soil, terrain, seismic, and sensor data',
       icon: Database,
-      color: 'text-tealAccent bg-tealAccent/10 border-tealAccent/20'
+      color: 'text-[#29A9FF] bg-[#29A9FF]/10'
     },
     {
       num: '02',
       title: 'Analyze',
       desc: 'Feature engineering and risk parameter analysis',
       icon: LineChart,
-      color: 'text-saffronAccent bg-saffronAccent/10 border-saffronAccent/20'
+      color: 'text-[#55C7FF] bg-[#55C7FF]/10'
     },
     {
       num: '03',
       title: 'Predict',
       desc: 'Machine-learning model estimates landslide probability',
       icon: Cpu,
-      color: 'text-tealAccent bg-tealAccent/10 border-tealAccent/20'
+      color: 'text-[#6D5CE7] bg-[#6D5CE7]/10'
     },
     {
       num: '04',
       title: 'Alert',
       desc: 'Authorities and communities receive risk-based warnings',
       icon: BellRing,
-      color: 'text-riskVeryHigh bg-riskVeryHigh/10 border-riskVeryHigh/20'
+      color: 'text-[#FF4D5A] bg-[#FF4D5A]/10'
     }
   ];
 
   return (
-    <div className="glass-panel p-5 flex flex-col lg:flex-row gap-6 lg:items-center justify-between">
+    <div className="flex flex-col gap-8 w-full select-none mt-4">
       
-      {/* Left: Heading block */}
-      <div className="max-w-xs shrink-0 flex flex-col gap-1">
-        <h3 className="text-base font-black text-textWhite tracking-tight uppercase">
-          How Bhoomi Rakshak Works
+      {/* Title */}
+      <div>
+        <span className="text-[10px] text-[#71839C] uppercase font-bold tracking-widest block">
+          Operational Pipeline
+        </span>
+        <h3 className="text-2xl font-bold uppercase tracking-wider text-[#F5F7FB] mt-1">
+          How Bhoomi Rakshak Sees the Risk
         </h3>
-        <p className="text-[11px] text-textMuted leading-relaxed">
-          Bhoomi Rakshak combines environmental, geological, historical, and sensor data to forecast landslide probability for the next 72 hours.
+        <p className="text-xs text-[#A7B6CC] mt-0.5 max-w-2xl leading-relaxed">
+          Bhoomi Rakshak combines environmental, geological, historical, and sensor data to forecast landslide probability.
         </p>
       </div>
 
-      {/* Right: Timeline Flex Row */}
-      <div className="flex-1 flex flex-col md:flex-row flex-wrap lg:flex-nowrap gap-4 items-stretch">
+      {/* Horizontal Steps with Connecting Line */}
+      <div className="relative flex flex-col lg:flex-row gap-6 lg:gap-12 items-start justify-between w-full mt-2">
+        {/* Horizontal connecting line on desktop */}
+        <div className="hidden lg:block absolute left-4 right-4 top-10 h-px bg-white/5 z-0" />
+
         {steps.map((step, idx) => {
           const Icon = step.icon;
           return (
-            <div key={idx} className="flex-1 min-w-[200px] flex gap-3 p-3.5 rounded-lg border border-white/8 bg-white/3 relative overflow-hidden">
+            <div key={idx} className="flex-1 flex gap-4 p-5 rounded-2xl bg-[#081830]/40 border border-white/5 relative z-10 w-full hover:border-white/10 transition-colors duration-300">
               
-              {/* Icon */}
-              <div className={`w-8 h-8 shrink-0 rounded-lg flex items-center justify-center border ${step.color} mt-0.5`}>
-                <Icon className="w-4 h-4" />
+              {/* Step number and icon */}
+              <div className="flex flex-col items-center gap-3">
+                <span className="font-mono text-2xl font-black text-[#71839C] tracking-tighter leading-none">
+                  {step.num}
+                </span>
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center ${step.color} shrink-0`}>
+                  <Icon className="w-4 h-4" />
+                </div>
               </div>
 
-              {/* Title & Desc */}
-              <div className="flex flex-col gap-0.5 z-10">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-mono text-[10px] text-textMuted font-bold">{step.num}</span>
-                  <h4 className="text-xs font-black text-textWhite uppercase">{step.title}</h4>
-                </div>
-                <p className="text-[10px] text-textMuted leading-normal">
+              {/* Step Info */}
+              <div className="flex flex-col gap-1">
+                <h4 className="text-sm font-bold text-[#F5F7FB] uppercase tracking-wider mt-0.5">{step.title}</h4>
+                <p className="text-xs text-[#A7B6CC] leading-relaxed">
                   {step.desc}
                 </p>
               </div>
