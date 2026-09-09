@@ -25,7 +25,7 @@ warnings.filterwarnings("ignore", category=InconsistentVersionWarning)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def find_file(*candidates: str) -> str:
-    subdirs = ["", "data/geojson", "geojson", "data", "models", "json", "config", "templates", "geo"]
+    subdirs = ["", "data", "data/geojson", "geojson", "models", "templates", "geo"]
     for c in candidates:
         for sub in subdirs:
             path = os.path.join(BASE_DIR, sub, c) if sub else os.path.join(BASE_DIR, c)
@@ -410,7 +410,7 @@ class PredictRequest(BaseModel):
 
 @app.get("/")
 def get_index():
-    index_file = os.path.join(BASE_DIR, "index.html")
+    index_file = find_file("index.html", "templates/index.html")
     if os.path.exists(index_file):
         return FileResponse(index_file)
     return {"message": "Bhoomi Rakshak API is online. Visit /docs for API documentation."}
@@ -423,15 +423,40 @@ def get_story():
 
 @app.get("/dashboard")
 def get_dashboard():
-    index_file = os.path.join(BASE_DIR, "index.html")
+    index_file = find_file("index.html", "templates/index.html")
     if os.path.exists(index_file):
         return FileResponse(index_file)
     return {"message": "Bhoomi Rakshak Dashboard not found."}
 
 
+@app.get("/logo.png")
+def get_logo_png():
+    logo_path = find_file("logo.png", "website-images/logo.png", "scroll-site/website-images/logo.png")
+    if os.path.exists(logo_path):
+        return FileResponse(logo_path, media_type="image/png")
+    raise HTTPException(status_code=404, detail="Logo not found")
+
+
+@app.get("/logo.jpg")
+def get_logo_jpg():
+    logo_path = find_file("logo.jpg", "website-images/logo.jpg", "scroll-site/website-images/logo.jpg")
+    if os.path.exists(logo_path):
+        return FileResponse(logo_path, media_type="image/jpeg")
+    raise HTTPException(status_code=404, detail="Logo not found")
+
+
+@app.get("/favicon.png")
+@app.get("/favicon.ico")
+def get_favicon():
+    fav_path = find_file("favicon.png", "logo.png")
+    if os.path.exists(fav_path):
+        return FileResponse(fav_path, media_type="image/png")
+    raise HTTPException(status_code=404, detail="Favicon not found")
+
+
 @app.get("/india-boundary-data.js")
 def get_india_boundary_js():
-    js_file = os.path.join(BASE_DIR, "india-boundary-data.js")
+    js_file = find_file("india-boundary-data.js", "data/india-boundary-data.js")
     if os.path.exists(js_file):
         return FileResponse(js_file, media_type="application/javascript")
     raise HTTPException(status_code=404, detail="Boundary JS not found")
@@ -439,7 +464,7 @@ def get_india_boundary_js():
 
 @app.get("/api/india-boundary")
 def get_india_boundary():
-    path = find_file("india_national_boundary.geojson", "data/geojson/india_national_boundary.geojson", "geojson/india_national_boundary.geojson")
+    path = find_file("india_national_boundary.geojson", "data/india_national_boundary.geojson")
     if os.path.exists(path):
         return FileResponse(path, media_type="application/geo+json")
     raise HTTPException(status_code=404, detail="Boundary file not found")
@@ -447,7 +472,7 @@ def get_india_boundary():
 
 @app.get("/api/india-states")
 def get_india_states():
-    path = find_file("india_states_soi.geojson", "data/geojson/india_states_soi.geojson", "geojson/india_states_soi.geojson")
+    path = find_file("india_states_soi.geojson", "data/india_states_soi.geojson")
     if os.path.exists(path):
         return FileResponse(path, media_type="application/geo+json")
     raise HTTPException(status_code=404, detail="States file not found")

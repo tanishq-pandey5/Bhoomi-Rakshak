@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Mountain, User, ExternalLink } from 'lucide-react';
+import { User, ExternalLink } from 'lucide-react';
 
 interface NavbarProps {
   onScrollTo: (sectionId: string) => void;
@@ -13,9 +13,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onScrollTo, lastUpdated }) => {
         
         {/* Left: Brand logo & name */}
         <div className="flex items-center gap-3 select-none">
-          <div className="relative flex items-center justify-center w-9 h-9 rounded bg-[#08264A] border border-[#29A9FF]/20 text-[#29A9FF]">
-            <Mountain className="w-4.5 h-4.5 absolute z-10 translate-y-[-2px]" />
-            <Shield className="w-5.5 h-5.5 opacity-30" />
+          <div className="relative flex items-center justify-center w-9 h-9 rounded-lg overflow-hidden border border-[#29A9FF]/30 shadow-sm shadow-[#29A9FF]/20 shrink-0 bg-slate-900">
+            <img src="/logo.png" alt="Bhoomi Rakshak Logo" className="w-full h-full object-cover" />
           </div>
           <div>
             <span className="text-xs font-black tracking-widest text-[#F5F7FB] uppercase block leading-none">
