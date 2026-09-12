@@ -1,5 +1,5 @@
 /* Bhoomi Rakshak — Premium Apple-Style Video Scrubber Engine
-   Preserves visual specs and coordinates transitions on a single loop. */
+   Features continuous Earth revolution when idle at top & fluid 60fps scroll scrubbing */
 
 const track = document.getElementById("track");
 const video1 = document.getElementById("video1");
@@ -9,117 +9,216 @@ const loadbar = document.getElementById("loadbar");
 const scrollCue = document.getElementById("scroll-cue");
 const captions = [...document.querySelectorAll(".caption")];
 
-// Video Durations (will read dynamic metadata on load)
+// Video Durations
 let dur1 = 8.0;
 let dur2 = 8.0;
 
-video1.addEventListener("loadedmetadata", () => {
-  dur1 = video1.duration;
-  checkLoadProgress();
-});
-video2.addEventListener("loadedmetadata", () => {
-  dur2 = video2.duration;
-  checkLoadProgress();
-});
-
-// Fast loader gating: hide loader once both videos have metadata ready
-let loadedCount = 0;
-function checkLoadProgress() {
-  loadedCount++;
-  loadbar.style.width = `${(loadedCount / 2) * 100}%`;
-  if (loadedCount >= 2) {
-    loader.classList.add("done");
-  }
+// Instant loader dismissal safeguard (guaranteed max 600ms)
+let isLoaderDismissed = false;
+function dismissLoader() {
+  if (isLoaderDismissed) return;
+  isLoaderDismissed = true;
+  if (loadbar) loadbar.style.width = "100%";
+  setTimeout(() => {
+    if (loader) loader.classList.add("done");
+  }, 150);
 }
 
-// Fallback loader close in case browser caches/blocks metadata event
-setTimeout(() => {
-  loader.classList.add("done");
-}, 2500);
+video1.addEventListener("loadedmetadata", () => {
+  dur1 = video1.duration || 8.0;
+  dismissLoader();
+});
+video2.addEventListener("loadedmetadata", () => {
+  dur2 = video2.duration || 8.0;
+});
+video1.addEventListener("canplay", dismissLoader);
+setTimeout(dismissLoader, 600);
 
-// Global Anim State
+// Global Animation State
 const state = {
   targetProgress: 0,
   currentProgress: 0,
   isStoryVisible: true
 };
 
-// 1. Centralized Scroll Listener (Passive)
+// Earth Revolution Parameters (in video1)
+// 0.0s to 4.2s is the revolving globe in space before camera accelerates to India
+const EARTH_REV_MIN = 0.05;
+const EARTH_REV_MAX = 4.2;
+let isAutoRotating = true;
+
+// Initialize continuous Earth revolution
+function initEarthRevolution() {
+  video1.muted = true;
+  video1.playsInline = true;
+  video1.currentTime = EARTH_REV_MIN;
+  const p = video1.play();
+  if (p !== undefined) {
+    p.catch(() => {
+      // If browser autoplay policy prevents auto-play without user gesture
+      const resume = () => {
+        if (isAutoRotating && video1.paused) video1.play();
+      };
+      window.addEventListener("click", resume, { once: true });
+      window.addEventListener("touchstart", resume, { once: true });
+      window.addEventListener("scroll", resume, { once: true });
+    });
+  }
+}
+initEarthRevolution();
+
+// 1. Centralized Passive Scroll Listener
 window.addEventListener("scroll", () => {
   const maxScroll = track.offsetHeight - window.innerHeight;
   state.targetProgress = maxScroll > 0 ? Math.min(1, Math.max(0, window.scrollY / maxScroll)) : 0;
 }, { passive: true });
 
-// 2. IntersectionObserver to completely suspend seeking when off-screen
+// 2. IntersectionObserver to throttle when off-screen
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     state.isStoryVisible = entry.isIntersecting;
+    if (!state.isStoryVisible && !video1.paused) {
+      video1.pause();
+    }
   });
 }, { threshold: 0.01 });
 observer.observe(track);
 
-// Ensure videos are paused and set up
-video1.pause();
-video2.pause();
+// 3. High-Performance Non-Blocking Seek Queue (fastSeek enabled)
+let isSeeking1 = false;
+let pendingTime1 = null;
+let isSeeking2 = false;
+let pendingTime2 = null;
 
-// Seek utility with hardware decoder seek-lock protection
-function seekVideo(video, targetTime) {
-  if (!video.duration) return;
-  const clampedTime = Math.min(video.duration - 0.05, Math.max(0, targetTime));
-  const diff = Math.abs(video.currentTime - clampedTime);
-  
-  // Only write to currentTime if diff is meaningful AND hardware is idle
-  if (diff > 0.04 && !video.seeking) {
-    video.currentTime = clampedTime;
+function scrubVideo1(targetTime) {
+  if (!video1.duration) return;
+  const clamped = Math.min(video1.duration - 0.05, Math.max(0, targetTime));
+  if (Math.abs(video1.currentTime - clamped) < 0.02) return;
+
+  if (isSeeking1) {
+    pendingTime1 = clamped;
+    return;
+  }
+
+  isSeeking1 = true;
+  if (typeof video1.fastSeek === "function") {
+    video1.fastSeek(clamped);
+  } else {
+    video1.currentTime = clamped;
   }
 }
 
-// 3. Centralized requestAnimationFrame Loop
+video1.addEventListener("seeked", () => {
+  isSeeking1 = false;
+  if (pendingTime1 !== null) {
+    const next = pendingTime1;
+    pendingTime1 = null;
+    scrubVideo1(next);
+  }
+});
+
+function scrubVideo2(targetTime) {
+  if (!video2.duration) return;
+  const clamped = Math.min(video2.duration - 0.05, Math.max(0, targetTime));
+  if (Math.abs(video2.currentTime - clamped) < 0.02) return;
+
+  if (isSeeking2) {
+    pendingTime2 = clamped;
+    return;
+  }
+
+  isSeeking2 = true;
+  if (typeof video2.fastSeek === "function") {
+    video2.fastSeek(clamped);
+  } else {
+    video2.currentTime = clamped;
+  }
+}
+
+video2.addEventListener("seeked", () => {
+  isSeeking2 = false;
+  if (pendingTime2 !== null) {
+    const next = pendingTime2;
+    pendingTime2 = null;
+    scrubVideo2(next);
+  }
+});
+
+// Seek recovery heartbeat
+setInterval(() => {
+  if (isSeeking1 && pendingTime1 !== null) {
+    isSeeking1 = false;
+    const n = pendingTime1;
+    pendingTime1 = null;
+    scrubVideo1(n);
+  }
+  if (isSeeking2 && pendingTime2 !== null) {
+    isSeeking2 = false;
+    const n = pendingTime2;
+    pendingTime2 = null;
+    scrubVideo2(n);
+  }
+}, 120);
+
+// 4. Centralized requestAnimationFrame Loop
 let lastT = performance.now();
 function tick(now) {
   const dt = Math.min((now - lastT) / 1000, 0.5) || 0.016;
   lastT = now;
 
-  // Exponential LERP smoothing
-  const k = 1 - Math.exp(-dt * 9.5); // 0.06 - 0.12 equivalent range
+  // LERP smoothing
+  const k = 1 - Math.exp(-dt * 10);
   state.currentProgress += (state.targetProgress - state.currentProgress) * k;
-  if (Math.abs(state.targetProgress - state.currentProgress) < 0.0005) {
+  if (Math.abs(state.targetProgress - state.currentProgress) < 0.0004) {
     state.currentProgress = state.targetProgress;
   }
 
   const p = state.currentProgress;
 
   if (state.isStoryVisible) {
-    // ── Video Selection & Coordinated Crossfade ──
-    if (p < 0.45) {
-      // Scale scroll segment [0.0 - 0.45] to fit video 1
-      const p1 = p / 0.45;
-      seekVideo(video1, p1 * dur1);
-      
+    // ── Continuous Earth Revolution Mode vs Scroll-Scrub Mode ──
+    if (p < 0.04 && window.scrollY < 40) {
+      // Hero Top State: Earth continuously revolves in space!
+      if (!isAutoRotating) {
+        isAutoRotating = true;
+        video1.play().catch(() => {});
+      }
+      // Seamlessly loop Earth revolution
+      if (video1.currentTime >= EARTH_REV_MAX) {
+        video1.currentTime = EARTH_REV_MIN;
+      }
       video1.style.opacity = "1";
       video2.style.opacity = "0";
-    } 
-    else if (p >= 0.45 && p <= 0.55) {
-      // Transition window: crossfade opacities
-      const crossProgress = (p - 0.45) / 0.10; // 0.0 to 1.0
-      
-      // Seek both close to transition point for seamless merge
-      seekVideo(video1, dur1 - 0.05);
-      seekVideo(video2, 0.05);
-      
-      video2.style.opacity = crossProgress.toFixed(3);
-      video1.style.opacity = (1.0 - crossProgress).toFixed(3);
-    } 
-    else {
-      // Scale scroll segment [0.55 - 1.0] to fit video 2
-      const p2 = (p - 0.55) / 0.45;
-      seekVideo(video2, p2 * dur2);
-      
-      video2.style.opacity = "1";
-      video1.style.opacity = "0";
+    } else {
+      // Scroll Active: Scrubbing takes over
+      if (isAutoRotating) {
+        isAutoRotating = false;
+        video1.pause();
+      }
+
+      if (p < 0.45) {
+        // Video 1: Earth rotates and camera accelerates to India
+        const p1 = p / 0.45;
+        scrubVideo1(p1 * dur1);
+        video1.style.opacity = "1";
+        video2.style.opacity = "0";
+      } else if (p >= 0.45 && p <= 0.55) {
+        // Crossfade between planetary zoom and terrain zoom
+        const cross = (p - 0.45) / 0.10;
+        scrubVideo1(dur1 - 0.05);
+        scrubVideo2(0.05);
+        video2.style.opacity = cross.toFixed(3);
+        video1.style.opacity = (1.0 - cross).toFixed(3);
+      } else {
+        // Video 2: Zoom into North-East India terrain & vulnerable hills
+        const p2 = (p - 0.55) / 0.45;
+        scrubVideo2(p2 * dur2);
+        video2.style.opacity = "1";
+        video1.style.opacity = "0";
+      }
     }
 
-    // ── Update Captions & Overlay Systems ──
+    // ── Update Captions & Dynamic Analytical Overlays ──
     updateCaptions(p);
     updateDynamicOverlays(p);
   }

@@ -1,5 +1,9 @@
-- `[x]` Overwrite `landslide/predict_server.py` with the new FastAPI backend, adding robust model and dataset path fallbacks
-- `[x]` Overwrite `vanilla/index.html` with the new HTML dashboard, preserving the Survey of India map boundary fixes
-- `[x]` Start the FastAPI backend server on port 8000 and the vanilla static server on port 3002
-- `[x]` Verify that the Leaflet risk grid loads correctly and point selection works
-- `[x]` Commit and push all changes to the remote branch `dashboard-refactor`
+# Task: Restore Scroll Animation Site with Revolving Earth & Top Logo
+
+- [x] Create/checkout feature branch for clean version control (`feature/scroll-earth-animation-logo`)
+- [x] Update `scroll-site/index.html` with fixed top logo navigation and hero badge
+- [x] Update `scroll-site/main.js` with continuous Earth revolution and non-blocking seek queue
+- [x] Update `backend/main.py` & `landslide/predict_server.py` routing (`/` for scroll story, `/dashboard` for live tactical map)
+- [x] Test and verify local server endpoints, video scrubbing, and logo display
+- [x] Commit and push changes to GitHub
+- [x] Update walkthrough document

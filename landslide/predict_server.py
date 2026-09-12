@@ -149,6 +149,9 @@ if not os.path.exists(SCROLL_SITE_DIR):
 
 if os.path.exists(SCROLL_SITE_DIR):
     app.mount("/scroll-site", StaticFiles(directory=SCROLL_SITE_DIR, html=True), name="scroll-site")
+    img_dir = os.path.join(SCROLL_SITE_DIR, "website-images")
+    if os.path.exists(img_dir):
+        app.mount("/website-images", StaticFiles(directory=img_dir), name="website-images")
 
 
 # -----------------------------------------------------------------------------
@@ -410,6 +413,10 @@ class PredictRequest(BaseModel):
 
 @app.get("/")
 def get_index():
+    # Primary landing page: Apple-style scroll animation story
+    scroll_file = os.path.join(SCROLL_SITE_DIR, "index.html") if os.path.exists(SCROLL_SITE_DIR) else None
+    if scroll_file and os.path.exists(scroll_file):
+        return FileResponse(scroll_file)
     index_file = find_file("index.html", "templates/index.html")
     if os.path.exists(index_file):
         return FileResponse(index_file)
@@ -418,15 +425,45 @@ def get_index():
 
 @app.get("/story")
 def get_story():
-    return RedirectResponse(url="/scroll-site/")
+    return RedirectResponse(url="/")
 
 
 @app.get("/dashboard")
+@app.get("/dashboard.html")
 def get_dashboard():
-    index_file = find_file("index.html", "templates/index.html")
-    if os.path.exists(index_file):
-        return FileResponse(index_file)
+    # Tactical live AI-GIS dashboard
+    dash_candidates = [
+        find_file("index.html", "templates/index.html"),
+        os.path.join(SCROLL_SITE_DIR, "dashboard.html") if os.path.exists(SCROLL_SITE_DIR) else ""
+    ]
+    for d in dash_candidates:
+        if d and os.path.exists(d):
+            return FileResponse(d)
     return {"message": "Bhoomi Rakshak Dashboard not found."}
+
+
+@app.get("/video1.mp4")
+def get_video1():
+    v1 = os.path.join(SCROLL_SITE_DIR, "video1.mp4") if os.path.exists(SCROLL_SITE_DIR) else ""
+    if v1 and os.path.exists(v1):
+        return FileResponse(v1, media_type="video/mp4")
+    raise HTTPException(status_code=404, detail="video1.mp4 not found")
+
+
+@app.get("/video2.mp4")
+def get_video2():
+    v2 = os.path.join(SCROLL_SITE_DIR, "video2.mp4") if os.path.exists(SCROLL_SITE_DIR) else ""
+    if v2 and os.path.exists(v2):
+        return FileResponse(v2, media_type="video/mp4")
+    raise HTTPException(status_code=404, detail="video2.mp4 not found")
+
+
+@app.get("/main.js")
+def get_main_js():
+    js = os.path.join(SCROLL_SITE_DIR, "main.js") if os.path.exists(SCROLL_SITE_DIR) else ""
+    if js and os.path.exists(js):
+        return FileResponse(js, media_type="application/javascript")
+    raise HTTPException(status_code=404, detail="main.js not found")
 
 
 @app.get("/logo.png")
