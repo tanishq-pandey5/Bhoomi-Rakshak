@@ -152,6 +152,9 @@ if os.path.exists(SCROLL_SITE_DIR):
     img_dir = os.path.join(SCROLL_SITE_DIR, "website-images")
     if os.path.exists(img_dir):
         app.mount("/website-images", StaticFiles(directory=img_dir), name="website-images")
+    frames_dir = os.path.join(SCROLL_SITE_DIR, "frames")
+    if os.path.exists(frames_dir):
+        app.mount("/frames", StaticFiles(directory=frames_dir), name="frames")
 
 
 # -----------------------------------------------------------------------------

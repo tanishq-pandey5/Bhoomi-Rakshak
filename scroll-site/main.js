@@ -1,229 +1,192 @@
-/* Bhoomi Rakshak — Premium Apple-Style Video Scrubber Engine
-   Features continuous Earth revolution when idle at top & fluid 60fps scroll scrubbing */
+/* Bhoomi Rakshak — High-Performance Apple-Style Canvas Scrubber Engine
+   Powered by 384 high-definition frames with active Earth revolution & 60/120fps fluid scrub */
 
+const canvas = document.getElementById("film");
+const ctx = canvas.getContext("2d");
 const track = document.getElementById("track");
-const video1 = document.getElementById("video1");
-const video2 = document.getElementById("video2");
 const loader = document.getElementById("loader");
 const loadbar = document.getElementById("loadbar");
 const scrollCue = document.getElementById("scroll-cue");
 const captions = [...document.querySelectorAll(".caption")];
 
-// Video Durations
-let dur1 = 8.0;
-let dur2 = 8.0;
+// Memory & Prefetch Window Configuration
+const KEEP = 140;      // keep up to 140 decoded bitmaps in memory
+const AHEAD = 45;      // decode ahead in scroll direction
 
-// Instant loader dismissal safeguard (guaranteed max 600ms)
-let isLoaderDismissed = false;
-function dismissLoader() {
-  if (isLoaderDismissed) return;
-  isLoaderDismissed = true;
-  if (loadbar) loadbar.style.width = "100%";
-  setTimeout(() => {
-    if (loader) loader.classList.add("done");
-  }, 150);
-}
-
-video1.addEventListener("loadedmetadata", () => {
-  dur1 = video1.duration || 8.0;
-  dismissLoader();
-});
-video2.addEventListener("loadedmetadata", () => {
-  dur2 = video2.duration || 8.0;
-});
-video1.addEventListener("canplay", dismissLoader);
-setTimeout(dismissLoader, 600);
-
-// Global Animation State
 const state = {
-  targetProgress: 0,
-  currentProgress: 0,
-  isStoryVisible: true
+  blobs: [],           // Blob per frame
+  bitmaps: new Map(),  // frameIndex → ImageBitmap
+  count: 384,
+  pattern: "frames/frame_%04d.webp",
+  current: -1,
+  target: 0,
+  smooth: 0,
+  dir: 1,
+  ready: false,
+  decoding: new Set(),
+  idleFrame: 0,
+  isAutoRotating: true
 };
 
-// Earth Revolution Parameters (in video1)
-// 0.0s to 4.2s is the revolving globe in space before camera accelerates to India
-const EARTH_REV_MIN = 0.05;
-const EARTH_REV_MAX = 4.2;
-let isAutoRotating = true;
+/* ── 1. Loading & Decoding Engine ── */
 
-// Initialize continuous Earth revolution
-function initEarthRevolution() {
-  video1.muted = true;
-  video1.playsInline = true;
-  video1.currentTime = EARTH_REV_MIN;
-  const p = video1.play();
-  if (p !== undefined) {
-    p.catch(() => {
-      // If browser autoplay policy prevents auto-play without user gesture
-      const resume = () => {
-        if (isAutoRotating && video1.paused) video1.play();
-      };
-      window.addEventListener("click", resume, { once: true });
-      window.addEventListener("touchstart", resume, { once: true });
-      window.addEventListener("scroll", resume, { once: true });
-    });
-  }
-}
-initEarthRevolution();
-
-// 1. Centralized Passive Scroll Listener
-window.addEventListener("scroll", () => {
-  const maxScroll = track.offsetHeight - window.innerHeight;
-  state.targetProgress = maxScroll > 0 ? Math.min(1, Math.max(0, window.scrollY / maxScroll)) : 0;
-}, { passive: true });
-
-// 2. IntersectionObserver to throttle when off-screen
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    state.isStoryVisible = entry.isIntersecting;
-    if (!state.isStoryVisible && !video1.paused) {
-      video1.pause();
+async function loadManifest() {
+  try {
+    const res = await fetch("frames/frames.json");
+    if (res.ok) {
+      const data = await res.json();
+      state.count = data.count || 384;
+      state.pattern = data.pattern || "frames/frame_%04d.webp";
     }
-  });
-}, { threshold: 0.01 });
-observer.observe(track);
-
-// 3. High-Performance Non-Blocking Seek Queue (fastSeek enabled)
-let isSeeking1 = false;
-let pendingTime1 = null;
-let isSeeking2 = false;
-let pendingTime2 = null;
-
-function scrubVideo1(targetTime) {
-  if (!video1.duration) return;
-  const clamped = Math.min(video1.duration - 0.05, Math.max(0, targetTime));
-  if (Math.abs(video1.currentTime - clamped) < 0.02) return;
-
-  if (isSeeking1) {
-    pendingTime1 = clamped;
-    return;
+  } catch (e) {
+    console.warn("Using default manifest config", e);
   }
+  state.blobs = new Array(state.count).fill(null);
+}
 
-  isSeeking1 = true;
-  if (typeof video1.fastSeek === "function") {
-    video1.fastSeek(clamped);
-  } else {
-    video1.currentTime = clamped;
+function frameURL(i) {
+  return state.pattern.replace("%04d", String(i + 1).padStart(4, "0"));
+}
+
+async function fetchBlob(i) {
+  if (i < 0 || i >= state.count) return null;
+  if (state.blobs[i]) return state.blobs[i];
+  try {
+    const res = await fetch(frameURL(i));
+    if (!res.ok) return null;
+    state.blobs[i] = await res.blob();
+    return state.blobs[i];
+  } catch {
+    return null;
   }
 }
 
-video1.addEventListener("seeked", () => {
-  isSeeking1 = false;
-  if (pendingTime1 !== null) {
-    const next = pendingTime1;
-    pendingTime1 = null;
-    scrubVideo1(next);
+async function decode(i) {
+  if (i < 0 || i >= state.count) return;
+  if (state.bitmaps.has(i) || state.decoding.has(i)) return;
+  
+  if (!state.blobs[i]) {
+    await fetchBlob(i);
   }
-});
+  if (!state.blobs[i] || state.bitmaps.has(i)) return;
 
-function scrubVideo2(targetTime) {
-  if (!video2.duration) return;
-  const clamped = Math.min(video2.duration - 0.05, Math.max(0, targetTime));
-  if (Math.abs(video2.currentTime - clamped) < 0.02) return;
-
-  if (isSeeking2) {
-    pendingTime2 = clamped;
-    return;
+  state.decoding.add(i);
+  try {
+    const bmp = await createImageBitmap(state.blobs[i]);
+    state.bitmaps.set(i, bmp);
+  } catch {
+    /* retry next tick */
   }
-
-  isSeeking2 = true;
-  if (typeof video2.fastSeek === "function") {
-    video2.fastSeek(clamped);
-  } else {
-    video2.currentTime = clamped;
-  }
+  state.decoding.delete(i);
 }
 
-video2.addEventListener("seeked", () => {
-  isSeeking2 = false;
-  if (pendingTime2 !== null) {
-    const next = pendingTime2;
-    pendingTime2 = null;
-    scrubVideo2(next);
+function manageWindow(center) {
+  // Decode ahead and behind around current playhead
+  for (let d = 0; d <= AHEAD; d++) {
+    const fwd = center + d * state.dir;
+    const back = center - Math.min(d, 12) * state.dir;
+    if (fwd >= 0 && fwd < state.count) decode(fwd);
+    if (back >= 0 && back < state.count) decode(back);
   }
-});
-
-// Seek recovery heartbeat
-setInterval(() => {
-  if (isSeeking1 && pendingTime1 !== null) {
-    isSeeking1 = false;
-    const n = pendingTime1;
-    pendingTime1 = null;
-    scrubVideo1(n);
-  }
-  if (isSeeking2 && pendingTime2 !== null) {
-    isSeeking2 = false;
-    const n = pendingTime2;
-    pendingTime2 = null;
-    scrubVideo2(n);
-  }
-}, 120);
-
-// 4. Centralized requestAnimationFrame Loop
-let lastT = performance.now();
-function tick(now) {
-  const dt = Math.min((now - lastT) / 1000, 0.5) || 0.016;
-  lastT = now;
-
-  // LERP smoothing
-  const k = 1 - Math.exp(-dt * 10);
-  state.currentProgress += (state.targetProgress - state.currentProgress) * k;
-  if (Math.abs(state.targetProgress - state.currentProgress) < 0.0004) {
-    state.currentProgress = state.targetProgress;
-  }
-
-  const p = state.currentProgress;
-
-  if (state.isStoryVisible) {
-    // ── Continuous Earth Revolution Mode vs Scroll-Scrub Mode ──
-    if (p < 0.04 && window.scrollY < 40) {
-      // Hero Top State: Earth continuously revolves in space!
-      if (!isAutoRotating) {
-        isAutoRotating = true;
-        video1.play().catch(() => {});
-      }
-      // Seamlessly loop Earth revolution
-      if (video1.currentTime >= EARTH_REV_MAX) {
-        video1.currentTime = EARTH_REV_MIN;
-      }
-      video1.style.opacity = "1";
-      video2.style.opacity = "0";
-    } else {
-      // Scroll Active: Scrubbing takes over
-      if (isAutoRotating) {
-        isAutoRotating = false;
-        video1.pause();
-      }
-
-      if (p < 0.45) {
-        // Video 1: Earth rotates and camera accelerates to India
-        const p1 = p / 0.45;
-        scrubVideo1(p1 * dur1);
-        video1.style.opacity = "1";
-        video2.style.opacity = "0";
-      } else if (p >= 0.45 && p <= 0.55) {
-        // Crossfade between planetary zoom and terrain zoom
-        const cross = (p - 0.45) / 0.10;
-        scrubVideo1(dur1 - 0.05);
-        scrubVideo2(0.05);
-        video2.style.opacity = cross.toFixed(3);
-        video1.style.opacity = (1.0 - cross).toFixed(3);
-      } else {
-        // Video 2: Zoom into North-East India terrain & vulnerable hills
-        const p2 = (p - 0.55) / 0.45;
-        scrubVideo2(p2 * dur2);
-        video2.style.opacity = "1";
-        video1.style.opacity = "0";
+  // Evict far away bitmaps if memory exceeds threshold
+  if (state.bitmaps.size > KEEP * 2) {
+    for (const [idx, bmp] of state.bitmaps) {
+      if (Math.abs(idx - center) > KEEP) {
+        if (typeof bmp.close === "function") bmp.close();
+        state.bitmaps.delete(idx);
       }
     }
-
-    // ── Update Captions & Dynamic Analytical Overlays ──
-    updateCaptions(p);
-    updateDynamicOverlays(p);
   }
+}
 
-  requestAnimationFrame(tick);
+// Rapid initial preload (eagerly fetch first 30 frames so page paints in ~200ms)
+async function preload() {
+  const EAGER = 30;
+  let done = 0;
+  
+  const eagerPromises = [];
+  for (let i = 0; i < EAGER; i++) {
+    eagerPromises.push(
+      fetchBlob(i).then(async (b) => {
+        done++;
+        if (loadbar) loadbar.style.width = `${(done / EAGER) * 100}%`;
+        if (b && i < 15) await decode(i);
+      })
+    );
+  }
+  await Promise.all(eagerPromises);
+  
+  // Ensure frame 0 is decoded and drawn immediately
+  await decode(0);
+  state.ready = true;
+  drawFrame(0);
+  if (loader) loader.classList.add("done");
+
+  // Load remaining frames in background with 6 parallel streams
+  let next = EAGER;
+  for (let w = 0; w < 6; w++) {
+    (async () => {
+      while (next < state.count) {
+        const i = next++;
+        try {
+          await fetchBlob(i);
+          // decode in background if near playhead
+          if (Math.abs(i - state.smooth) < AHEAD) {
+            await decode(i);
+          }
+        } catch {}
+      }
+    })();
+  }
+}
+
+/* ── 2. Canvas Rendering ── */
+
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.round(canvas.clientWidth * dpr);
+  canvas.height = Math.round(canvas.clientHeight * dpr);
+  state.current = -1; // force redraw
+  if (state.ready) {
+    const idx = Math.round(state.smooth);
+    drawFrame(idx);
+  }
+}
+
+function nearestDecoded(i) {
+  if (state.bitmaps.has(i)) return i;
+  for (let d = 1; d < 35; d++) {
+    if (state.bitmaps.has(i - d)) return i - d;
+    if (state.bitmaps.has(i + d)) return i + d;
+  }
+  return state.bitmaps.has(0) ? 0 : -1;
+}
+
+function drawFrame(i) {
+  const j = nearestDecoded(i);
+  if (j < 0) return;
+  const bmp = state.bitmaps.get(j);
+  if (!bmp) return;
+  
+  const cw = canvas.width;
+  const ch = canvas.height;
+  
+  ctx.fillStyle = "#051321";
+  ctx.fillRect(0, 0, cw, ch);
+
+  // Cover canvas preserving aspect ratio
+  const s = Math.max(cw / bmp.width, ch / bmp.height);
+  const w = bmp.width * s;
+  const h = bmp.height * s;
+  ctx.drawImage(bmp, (cw - w) / 2, (ch - h) / 2, w, h);
+  state.current = j;
+}
+
+/* ── 3. Scroll Progress & Telemetry Overlays ── */
+
+function progress() {
+  const max = track.offsetHeight - window.innerHeight;
+  return max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
 }
 
 function updateCaptions(p) {
@@ -237,21 +200,19 @@ function updateCaptions(p) {
       o = Math.min(Math.max(o, 0), 1);
     }
     el.style.opacity = o.toFixed(3);
-    
-    // Gentle GPU translate parallax
-    const drift = (p - tHold) * -45;
-    el.style.transform = `${transformBase(el)} translate3d(0, ${drift.toFixed(1)}px, 0)`;
+    const drift = (p - tHold) * -40;
+    el.style.transform = `${transformBase(el)} translateY(${drift.toFixed(1)}px)`;
   }
-  scrollCue.style.opacity = p < 0.015 ? 1 : 0;
+  if (scrollCue) scrollCue.style.opacity = p < 0.015 ? 1 : 0;
 }
 
 function transformBase(el) {
-  if (el.classList.contains("cap-center")) return "translate3d(-50%, -50%, 0)";
-  if (el.classList.contains("cap-top") || el.classList.contains("cap-bottom")) return "translate3d(-50%, 0, 0)";
-  return "translate3d(0, -50%, 0)";
+  if (el.classList.contains("cap-center")) return "translate(-50%, -50%)";
+  if (el.classList.contains("cap-top") || el.classList.contains("cap-bottom")) return "translateX(-50%)";
+  return "translateY(-50%)";
 }
 
-// ── Overlay Systems coordination ──
+// Interactive Overlay References
 const overlayRain = document.getElementById("node-rainfall");
 const overlayMoisture = document.getElementById("node-moisture");
 const overlaySlope = document.getElementById("node-slope");
@@ -278,8 +239,9 @@ if (timelinePath) {
 }
 
 function updateDynamicOverlays(p) {
-  // 1. Environmental Telemetry Nodes (Reveal: 0.50 -> 0.65)
+  // 1. Environmental Telemetry Nodes (0.50 -> 0.65)
   const triggerNode = (node, start, end) => {
+    if (!node) return;
     if (p >= start && p <= end) {
       node.style.opacity = "1";
       node.style.transform = "translate3d(0, 0, 0)";
@@ -298,27 +260,39 @@ function updateDynamicOverlays(p) {
 
   if (p >= 0.50 && p <= 0.65) {
     const factor = (p - 0.50) / 0.15;
-    document.getElementById("over-val-rain").innerText = `${Math.round(15 + factor * 27)} mm/hr`;
-    document.getElementById("over-val-moisture").innerText = `${Math.round(45 + factor * 33)}%`;
-    document.getElementById("over-val-vibe").innerText = factor > 0.6 ? "CRITICAL ALERT" : "ELEVATED";
-    document.getElementById("over-val-vibe").style.color = factor > 0.6 ? "var(--risk-red)" : "var(--saffron)";
+    const rainEl = document.getElementById("over-val-rain");
+    const moistEl = document.getElementById("over-val-moisture");
+    const vibeEl = document.getElementById("over-val-vibe");
+    if (rainEl) rainEl.innerText = `${Math.round(15 + factor * 27)} mm/hr`;
+    if (moistEl) moistEl.innerText = `${Math.round(45 + factor * 33)}%`;
+    if (vibeEl) {
+      vibeEl.innerText = factor > 0.6 ? "CRITICAL ALERT" : "ELEVATED";
+      vibeEl.style.color = factor > 0.6 ? "var(--risk-red)" : "var(--saffron)";
+    }
   }
 
   // 2. AI Convergence (0.65 -> 0.78)
   if (p >= 0.65 && p <= 0.78) {
-    svgOverlay.style.opacity = "1";
+    if (svgOverlay) svgOverlay.style.opacity = "1";
     const targetX = window.innerWidth / 2;
     const targetY = window.innerHeight / 2;
 
-    aiCircle.setAttribute("cx", targetX);
-    aiCircle.setAttribute("cy", targetY);
-    aiText.setAttribute("x", targetX);
-    aiText.setAttribute("y", targetY + 4);
+    if (aiCircle) {
+      aiCircle.setAttribute("cx", targetX);
+      aiCircle.setAttribute("cy", targetY);
+    }
+    if (aiText) {
+      aiText.setAttribute("x", targetX);
+      aiText.setAttribute("y", targetY + 4);
+    }
 
     const convProgress = (p - 0.65) / 0.13;
 
     const setLineCoords = (lineEl, nodeEl) => {
-      const rect = nodeEl.querySelector(".telemetry-pin").getBoundingClientRect();
+      if (!lineEl || !nodeEl) return;
+      const pin = nodeEl.querySelector(".telemetry-pin");
+      if (!pin) return;
+      const rect = pin.getBoundingClientRect();
       const fromX = rect.left + 5;
       const fromY = rect.top + 5;
       const curX = fromX + (targetX - fromX) * convProgress;
@@ -337,10 +311,15 @@ function updateDynamicOverlays(p) {
     setLineCoords(document.getElementById("line-vibration"), overlayVibration);
     setLineCoords(document.getElementById("line-history"), overlayHistory);
 
-    aiCircle.style.opacity = convProgress >= 0.7 ? ((convProgress - 0.7) / 0.3).toFixed(3) : "0";
-    aiText.style.opacity = convProgress >= 0.7 ? ((convProgress - 0.7) / 0.3).toFixed(3) : "0";
+    if (aiCircle) {
+      aiCircle.style.opacity = convProgress >= 0.7 ? ((convProgress - 0.7) / 0.3).toFixed(3) : "0";
+    }
+    if (aiText) {
+      aiText.style.opacity = convProgress >= 0.7 ? ((convProgress - 0.7) / 0.3).toFixed(3) : "0";
+    }
 
-    const contractNode = (node, originalLeft, originalTop) => {
+    const contractNode = (node) => {
+      if (!node) return;
       node.style.opacity = (1 - convProgress).toFixed(2);
       const rect = node.getBoundingClientRect();
       const nodeX = rect.left + rect.width / 2;
@@ -358,39 +337,101 @@ function updateDynamicOverlays(p) {
     contractNode(overlayHistory);
 
   } else {
-    svgOverlay.style.opacity = "0";
+    if (svgOverlay) svgOverlay.style.opacity = "0";
   }
 
   // 3. 72H Timeline (0.78 -> 0.88)
   if (p >= 0.78 && p <= 0.88) {
-    overlayTimeline.style.opacity = "1";
+    if (overlayTimeline) overlayTimeline.style.opacity = "1";
     const pathProgress = (p - 0.78) / 0.10;
-    const offset = pathTotalLength - (pathProgress * pathTotalLength);
-    timelinePath.style.strokeDashoffset = offset;
+    if (timelinePath) {
+      const offset = pathTotalLength - (pathProgress * pathTotalLength);
+      timelinePath.style.strokeDashoffset = offset;
+      const point = timelinePath.getPointAtLength(pathProgress * pathTotalLength);
+      if (timelineMarker) {
+        timelineMarker.setAttribute("cx", point.x);
+        timelineMarker.setAttribute("cy", point.y);
+        timelineMarker.style.opacity = "1";
+      }
+    }
 
-    const point = timelinePath.getPointAtLength(pathProgress * pathTotalLength);
-    timelineMarker.setAttribute("cx", point.x);
-    timelineMarker.setAttribute("cy", point.y);
-    timelineMarker.style.opacity = "1";
-
-    tickNow.classList.toggle("active", pathProgress >= 0.0);
-    tick24.classList.toggle("active", pathProgress >= 0.33);
-    tick48.classList.toggle("active", pathProgress >= 0.66);
-    tick72.classList.toggle("active", pathProgress >= 0.95);
+    if (tickNow) tickNow.classList.toggle("active", pathProgress >= 0.0);
+    if (tick24) tick24.classList.toggle("active", pathProgress >= 0.33);
+    if (tick48) tick48.classList.toggle("active", pathProgress >= 0.66);
+    if (tick72) tick72.classList.toggle("active", pathProgress >= 0.95);
   } else {
-    overlayTimeline.style.opacity = "0";
+    if (overlayTimeline) overlayTimeline.style.opacity = "0";
   }
 
   // 4. Warning Payoff & Risk Score (0.88 -> 0.98)
   if (p >= 0.88 && p <= 0.98) {
-    overlayRiskScore.style.opacity = "1";
+    if (overlayRiskScore) overlayRiskScore.style.opacity = "1";
     const riskProgress = (p - 0.88) / 0.10;
     const countTo = Math.round(riskProgress * 78);
-    document.getElementById("risk-display-num").innerText = `${countTo}%`;
+    const displayNum = document.getElementById("risk-display-num");
+    if (displayNum) displayNum.innerText = `${countTo}%`;
   } else {
-    overlayRiskScore.style.opacity = "0";
+    if (overlayRiskScore) overlayRiskScore.style.opacity = "0";
   }
 }
 
-// Boot loop
+/* ── 4. Main Animation & Earth Revolution Loop ── */
+
+let lastT = performance.now();
+function tick(now) {
+  const dt = Math.min((now - lastT) / 1000, 0.5) || 0.016;
+  lastT = now;
+
+  if (state.ready) {
+    const p = progress();
+
+    if (p < 0.02 && window.scrollY < 30) {
+      // ── Idle Hero State: Active Continuous Earth Revolution ──
+      state.isAutoRotating = true;
+      // Frames 0 to 80 represent the rotating globe in space before camera accelerates to India
+      state.idleFrame = (state.idleFrame + dt * 20) % 80;
+      const targetFrame = Math.round(state.idleFrame);
+      state.smooth = targetFrame;
+      manageWindow(targetFrame);
+      drawFrame(targetFrame);
+    } else {
+      // ── Scroll Driven Scrubbing ──
+      state.isAutoRotating = false;
+      const prevTarget = state.target;
+      state.target = p * (state.count - 1);
+      if (state.target !== prevTarget) state.dir = state.target >= prevTarget ? 1 : -1;
+
+      // Ultra-smooth exponential LERP
+      const k = 1 - Math.exp(-dt * 14);
+      state.smooth += (state.target - state.smooth) * k;
+      if (Math.abs(state.target - state.smooth) < 0.4) state.smooth = state.target;
+
+      const i = Math.round(state.smooth);
+      manageWindow(i);
+      drawFrame(i);
+    }
+
+    updateCaptions(p);
+    updateDynamicOverlays(p);
+  }
+
+  requestAnimationFrame(tick);
+}
+
+/* ── 5. Initialization ── */
+
+window.addEventListener("resize", resize);
+resize();
+
+// Dismiss loader fallback (guaranteed max 1.5s)
+setTimeout(() => {
+  if (loader && !loader.classList.contains("done")) {
+    loader.classList.add("done");
+  }
+}, 1500);
+
+loadManifest()
+  .then(() => preload())
+  .catch((err) => console.error("Error initializing frame sequence:", err));
+
 requestAnimationFrame(tick);

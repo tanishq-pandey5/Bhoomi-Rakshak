@@ -401,9 +401,8 @@
   <!-- Scroll-Scrubber Canvas Track -->
   <div id="track">
     <div id="stage">
-      <div id="film-container" style="position: absolute; inset: 0; width: 100%; height: 100%;">
-        <video id="video1" src="video1.mp4" autoplay muted playsinline loop preload="auto" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity 0.3s ease;"></video>
-        <video id="video2" src="video2.mp4" muted playsinline preload="auto" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.3s ease;"></video>
+      <div id="film-container">
+        <canvas id="film"></canvas>
       </div>
       <div id="vignette"></div>
 
