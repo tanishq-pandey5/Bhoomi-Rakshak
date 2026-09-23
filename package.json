@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && cp -r scroll-site dist/scroll-site && cp -r scroll-site/frames dist/frames && cp -r scroll-site/website-images dist/website-images",
     "lint": "oxlint",
     "preview": "vite preview"
   },

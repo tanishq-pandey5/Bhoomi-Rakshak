@@ -1,0 +1,10 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/", "destination": "/scroll-site/index.html" },
+    { "source": "/dashboard", "destination": "/scroll-site/dashboard.html" },
+    { "source": "/react", "destination": "/index.html" }
+  ]
+}
