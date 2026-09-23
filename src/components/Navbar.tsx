@@ -13,8 +13,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onScrollTo, lastUpdated }) => {
         
         {/* Left: Brand logo & name */}
         <div className="flex items-center gap-3 select-none">
-          <div className="relative flex items-center justify-center w-9 h-9 rounded-lg overflow-hidden border border-[#29A9FF]/30 shadow-sm shadow-[#29A9FF]/20 shrink-0 bg-slate-900">
-            <img src="/logo.png" alt="Bhoomi Rakshak Logo" className="w-full h-full object-cover" />
+          <div 
+            className="relative flex items-center justify-center rounded-lg overflow-hidden border border-[#29A9FF]/30 shadow-sm shadow-[#29A9FF]/20 shrink-0 bg-slate-900"
+            style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', maxWidth: '36px', maxHeight: '36px' }}
+          >
+            <img 
+              src="/logo.png" 
+              alt="Bhoomi Rakshak Logo" 
+              width={36} 
+              height={36} 
+              style={{ width: '36px', height: '36px', maxWidth: '36px', maxHeight: '36px', objectFit: 'cover', display: 'block' }} 
+            />
           </div>
           <div>
             <span className="text-xs font-black tracking-widest text-[#F5F7FB] uppercase block leading-none">

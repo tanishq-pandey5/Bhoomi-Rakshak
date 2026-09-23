@@ -4,6 +4,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Universal Image Safeguard */
+img, video {
+  max-width: 100%;
+}
+
+img {
+  display: block;
+}
+
 :root {
   font-family: 'Plus Jakarta Sans', 'Inter', 'Manrope', sans-serif;
   color-scheme: dark;

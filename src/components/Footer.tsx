@@ -14,8 +14,17 @@ export const Footer: React.FC<FooterProps> = ({ onScrollTo }) => {
           
           <div className="flex flex-col gap-3 max-w-sm">
             <div className="flex items-center gap-2.5">
-              <div className="relative flex items-center justify-center w-8 h-8 rounded-lg overflow-hidden border border-tealAccent/30 shadow-sm shrink-0 bg-slate-900">
-                <img src="/logo.png" alt="Bhoomi Rakshak Logo" className="w-full h-full object-cover" />
+              <div 
+                className="relative flex items-center justify-center rounded-lg overflow-hidden border border-tealAccent/30 shadow-sm shrink-0 bg-slate-900"
+                style={{ width: '32px', height: '32px', minWidth: '32px', minHeight: '32px', maxWidth: '32px', maxHeight: '32px' }}
+              >
+                <img 
+                  src="/logo.png" 
+                  alt="Bhoomi Rakshak Logo" 
+                  width={32} 
+                  height={32} 
+                  style={{ width: '32px', height: '32px', maxWidth: '32px', maxHeight: '32px', objectFit: 'cover', display: 'block' }} 
+                />
               </div>
               <span className="text-sm font-extrabold text-textWhite uppercase tracking-wider">
                 Bhoomi Rakshak
