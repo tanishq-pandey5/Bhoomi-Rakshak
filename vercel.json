@@ -9,7 +9,6 @@
       "entrypoint": "main.py"
     }
   },
-  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/api/(.*)?",
@@ -17,22 +16,6 @@
         "type": "service",
         "service": "backend"
       }
-    },
-    {
-      "source": "/dashboard",
-      "destination": "/dashboard.html"
-    },
-    {
-      "source": "/story",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/react",
-      "destination": "/react.html"
-    },
-    {
-      "source": "/app",
-      "destination": "/react.html"
     },
     {
       "source": "/(.*)",
