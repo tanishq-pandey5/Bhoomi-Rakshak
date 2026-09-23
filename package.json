@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && cp -r scroll-site dist/scroll-site && cp -r scroll-site/frames dist/frames && cp -r scroll-site/website-images dist/website-images",
+    "build": "tsc -b && vite build && cp dist/index.html dist/react.html && cp scroll-site/index.html dist/index.html && cp scroll-site/dashboard.html dist/dashboard.html && cp scroll-site/main.js dist/main.js && cp scroll-site/favicon.png dist/favicon.png && cp scroll-site/logo.png dist/logo.png && cp -r scroll-site/frames dist/frames && cp -r scroll-site/website-images dist/website-images && cp -r scroll-site dist/scroll-site",
     "lint": "oxlint",
     "preview": "vite preview"
   },
